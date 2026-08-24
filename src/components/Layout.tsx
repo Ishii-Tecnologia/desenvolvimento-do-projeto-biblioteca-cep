@@ -62,31 +62,6 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Top Notification / Demo Banner */}
-      {!user && (
-        <div className="bg-slate-900 text-slate-100 text-xs py-1.5 px-4 text-center border-b border-slate-800 flex items-center justify-center gap-2 flex-wrap">
-          <span className="font-semibold text-emerald-400">Ambiente de Demonstração:</span>
-          <span>Acesse instantaneamente como</span>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-6 px-2 py-0 text-xs bg-emerald-700 hover:bg-emerald-600 text-white border-emerald-500 font-medium"
-            onClick={() => quickLoginAs('admin')}
-          >
-            Bibliotecário / Admin
-          </Button>
-          <span>ou</span>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-6 px-2 py-0 text-xs bg-blue-700 hover:bg-blue-600 text-white border-blue-500 font-medium"
-            onClick={() => quickLoginAs('leitor')}
-          >
-            Leitor / Usuário
-          </Button>
-        </div>
-      )}
-
       {/* Main Header */}
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
