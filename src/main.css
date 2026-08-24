@@ -10,8 +10,8 @@
 @layer base {
   :root {
     /* Change the colors to match the design system */
-    --background: 40.9 75.8% 59.4%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 142.1 76.2% 36.3%;
+    --foreground: 240 15.4% 5.1%;
 
     --card: 40.9 75.8% 59.4%;
     --card-foreground: 222.2 84% 4.9%;
