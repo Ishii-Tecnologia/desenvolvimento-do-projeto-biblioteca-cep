@@ -13,11 +13,11 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Library, LogIn, UserPlus, Loader2 } from 'lucide-react'
+import { Library, LogIn, UserPlus, Loader2, Shield, User } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 export default function Login() {
-  const { signIn, signUp, user } = useAuth()
+  const { signIn, signUp, quickLoginAs, user } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -63,6 +63,28 @@ export default function Login() {
         })
       } else {
         toast({ title: 'Bem-vindo!', description: 'Login realizado com sucesso.' })
+        navigate(from, { replace: true })
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleQuickLogin = async (role: 'admin' | 'leitor') => {
+    setLoading(true)
+    try {
+      const { error } = await quickLoginAs(role)
+      if (error) {
+        toast({
+          title: 'Falha no acesso rápido',
+          description: error.message || 'Não foi possível entrar com esta conta.',
+          variant: 'destructive',
+        })
+      } else {
+        toast({
+          title: 'Bem-vindo!',
+          description: `Acesso rápido como ${role === 'admin' ? 'Administrador' : 'Leitor'} realizado com sucesso.`,
+        })
         navigate(from, { replace: true })
       }
     } finally {
@@ -176,6 +198,50 @@ export default function Login() {
                     Entrar no Sistema
                   </Button>
                 </CardFooter>
+
+                {/* Quick login shortcut section */}
+                <div className="px-6 pb-6 pt-1 space-y-3">
+                  <div className="relative flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-slate-200" />
+                    </div>
+                    <span className="relative bg-white px-2 text-[11px] font-medium text-slate-400">
+                      ou acesse rapidamente
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleQuickLogin('admin')}
+                      disabled={loading}
+                      className="bg-slate-700 hover:bg-slate-800 text-white border-slate-700 hover:text-white text-xs h-9 gap-1.5 shadow-sm transition-colors"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Shield className="w-3.5 h-3.5 text-amber-400" />
+                      )}
+                      <span>Acesso Admin</span>
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleQuickLogin('leitor')}
+                      disabled={loading}
+                      className="bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200 text-xs h-9 gap-1.5 shadow-sm transition-colors"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <User className="w-3.5 h-3.5 text-slate-600" />
+                      )}
+                      <span>Acesso Leitor</span>
+                    </Button>
+                  </div>
+                </div>
               </form>
             </TabsContent>
 
