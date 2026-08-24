@@ -29,7 +29,7 @@ import { LoanModal } from '@/components/LoanModal'
 import { ReserveModal } from '@/components/ReserveModal'
 
 export default function Index() {
-  const { user, isOperadorOrAdmin, isAdmin, quickLoginAs } = useAuth()
+  const { user, isOperadorOrAdmin, isAdmin } = useAuth()
   const [stats, setStats] = useState({
     totalTitulos: 0,
     totalExemplares: 0,

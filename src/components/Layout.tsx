@@ -34,7 +34,7 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const { user, profile, isAdmin, isOperadorOrAdmin, signOut, quickLoginAs } = useAuth()
+  const { user, profile, isAdmin, isOperadorOrAdmin, signOut } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
   const navigate = useNavigate()
 

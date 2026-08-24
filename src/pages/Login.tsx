@@ -13,11 +13,11 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Library, LogIn, UserPlus, Loader2, Sparkles, Shield, User } from 'lucide-react'
+import { Library, LogIn, UserPlus, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 export default function Login() {
-  const { signIn, signUp, quickLoginAs, user } = useAuth()
+  const { signIn, signUp, user } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
 
@@ -100,28 +100,6 @@ export default function Login() {
     }
   }
 
-  const handleDemoLogin = async (role: 'admin' | 'leitor') => {
-    setLoading(true)
-    try {
-      const { error } = await quickLoginAs(role)
-      if (error) {
-        toast({
-          title: 'Erro ao entrar como demo',
-          description: error.message,
-          variant: 'destructive',
-        })
-      } else {
-        toast({
-          title: 'Acesso Rápido Concedido',
-          description: `Conectado como ${role === 'admin' ? 'Bibliotecário / Administrador' : 'Leitor / Usuário'}.`,
-        })
-        navigate('/')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
     <div className="min-h-[80vh] flex flex-col justify-center items-center py-8">
       <div className="w-full max-w-md space-y-6">
@@ -132,39 +110,6 @@ export default function Login() {
           </div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Biblioteca CEP</h1>
           <p className="text-xs text-slate-500">Sistema de Gestão de Acervo e Empréstimos</p>
-        </div>
-
-        {/* Quick Demo Access Bar */}
-        <div className="p-4 bg-emerald-50/80 border border-emerald-200 rounded-xl space-y-2.5">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-900">
-            <Sparkles className="w-4 h-4 text-emerald-600" />
-            Acesso Rápido de Demonstração
-          </div>
-          <p className="text-[11px] text-emerald-800 leading-snug">
-            Experimente os diferentes perfis com um clique sem necessidade de cadastro manual:
-          </p>
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => handleDemoLogin('admin')}
-              disabled={loading}
-              className="h-8 text-xs bg-emerald-700 hover:bg-emerald-800 text-white font-medium gap-1.5"
-            >
-              <Shield className="w-3.5 h-3.5" />
-              Entrar como Admin
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => handleDemoLogin('leitor')}
-              disabled={loading}
-              className="h-8 text-xs bg-blue-700 hover:bg-blue-800 text-white font-medium gap-1.5"
-            >
-              <User className="w-3.5 h-3.5" />
-              Entrar como Leitor
-            </Button>
-          </div>
         </div>
 
         {/* Auth Card */}

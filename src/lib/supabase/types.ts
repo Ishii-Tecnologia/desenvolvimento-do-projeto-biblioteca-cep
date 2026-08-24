@@ -63,6 +63,57 @@ export type Database = {
           },
         ]
       }
+      emprestimos: {
+        Row: {
+          created_at: string
+          data_devolucao: string | null
+          data_emprestimo: string
+          data_prevista: string
+          exemplar_id: string
+          id: string
+          leitor_id: string
+          renovado: boolean
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          data_devolucao?: string | null
+          data_emprestimo?: string
+          data_prevista: string
+          exemplar_id: string
+          id?: string
+          leitor_id: string
+          renovado?: boolean
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          data_devolucao?: string | null
+          data_emprestimo?: string
+          data_prevista?: string
+          exemplar_id?: string
+          id?: string
+          leitor_id?: string
+          renovado?: boolean
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'emprestimos_exemplar_id_fkey'
+            columns: ['exemplar_id']
+            isOneToOne: false
+            referencedRelation: 'exemplares'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'emprestimos_leitor_id_fkey'
+            columns: ['leitor_id']
+            isOneToOne: false
+            referencedRelation: 'leitores'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       exemplar: {
         Row: {
           created_at: string
@@ -97,6 +148,71 @@ export type Database = {
             referencedColumns: ['id_titulo']
           },
         ]
+      }
+      exemplares: {
+        Row: {
+          codigo: string
+          created_at: string
+          estante: string | null
+          id: string
+          status: string
+          titulo_id: string
+        }
+        Insert: {
+          codigo: string
+          created_at?: string
+          estante?: string | null
+          id?: string
+          status?: string
+          titulo_id: string
+        }
+        Update: {
+          codigo?: string
+          created_at?: string
+          estante?: string | null
+          id?: string
+          status?: string
+          titulo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'exemplares_titulo_id_fkey'
+            columns: ['titulo_id']
+            isOneToOne: false
+            referencedRelation: 'titulos'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      historico: {
+        Row: {
+          created_at: string
+          descricao: string
+          entidade_id: string
+          entidade_tipo: string
+          id: string
+          tipo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          descricao: string
+          entidade_id: string
+          entidade_tipo: string
+          id?: string
+          tipo: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          entidade_id?: string
+          entidade_tipo?: string
+          id?: string
+          tipo?: string
+          usuario_id?: string | null
+        }
+        Relationships: []
       }
       historico_movimentacao: {
         Row: {
@@ -179,6 +295,36 @@ export type Database = {
         }
         Relationships: []
       }
+      leitores: {
+        Row: {
+          bloqueado: boolean
+          created_at: string
+          email: string
+          endereco: string | null
+          id: string
+          nome: string
+          telefone: string | null
+        }
+        Insert: {
+          bloqueado?: boolean
+          created_at?: string
+          email: string
+          endereco?: string | null
+          id?: string
+          nome: string
+          telefone?: string | null
+        }
+        Update: {
+          bloqueado?: boolean
+          created_at?: string
+          email?: string
+          endereco?: string | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+        }
+        Relationships: []
+      }
       parametro_sistema: {
         Row: {
           descricao: string | null
@@ -200,29 +346,62 @@ export type Database = {
         }
         Relationships: []
       }
+      parametros: {
+        Row: {
+          chave: string
+          descricao: string | null
+          id: string
+          updated_at: string
+          valor: string
+        }
+        Insert: {
+          chave: string
+          descricao?: string | null
+          id?: string
+          updated_at?: string
+          valor: string
+        }
+        Update: {
+          chave?: string
+          descricao?: string | null
+          id?: string
+          updated_at?: string
+          valor?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          bloqueado: boolean | null
           created_at: string
           email: string
           full_name: string | null
           id: string
+          nome: string | null
+          papel: string | null
           role: string | null
         }
         Insert: {
           avatar_url?: string | null
+          bloqueado?: boolean | null
           created_at?: string
           email: string
           full_name?: string | null
           id: string
+          nome?: string | null
+          papel?: string | null
           role?: string | null
         }
         Update: {
           avatar_url?: string | null
+          bloqueado?: boolean | null
           created_at?: string
           email?: string
           full_name?: string | null
           id?: string
+          nome?: string | null
+          papel?: string | null
           role?: string | null
         }
         Relationships: []
@@ -272,6 +451,48 @@ export type Database = {
           },
         ]
       }
+      reservas: {
+        Row: {
+          created_at: string
+          data_reserva: string
+          id: string
+          leitor_id: string
+          status: string
+          titulo_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_reserva?: string
+          id?: string
+          leitor_id: string
+          status?: string
+          titulo_id: string
+        }
+        Update: {
+          created_at?: string
+          data_reserva?: string
+          id?: string
+          leitor_id?: string
+          status?: string
+          titulo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'reservas_leitor_id_fkey'
+            columns: ['leitor_id']
+            isOneToOne: false
+            referencedRelation: 'leitores'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'reservas_titulo_id_fkey'
+            columns: ['titulo_id']
+            isOneToOne: false
+            referencedRelation: 'titulos'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       titulo: {
         Row: {
           ano_publicacao: number | null
@@ -314,11 +535,51 @@ export type Database = {
         }
         Relationships: []
       }
+      titulos: {
+        Row: {
+          ano: number | null
+          autor: string
+          capa_url: string | null
+          codigo: string | null
+          created_at: string
+          editora: string | null
+          genero: string | null
+          id: string
+          isbn: string | null
+          titulo: string
+        }
+        Insert: {
+          ano?: number | null
+          autor: string
+          capa_url?: string | null
+          codigo?: string | null
+          created_at?: string
+          editora?: string | null
+          genero?: string | null
+          id?: string
+          isbn?: string | null
+          titulo: string
+        }
+        Update: {
+          ano?: number | null
+          autor?: string
+          capa_url?: string | null
+          codigo?: string | null
+          created_at?: string
+          editora?: string | null
+          genero?: string | null
+          id?: string
+          isbn?: string | null
+          titulo?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      atualizar_status_atrasos: { Args: never; Returns: number }
       current_profile: { Args: never; Returns: string }
       devolver_exemplar: {
         Args: { p_id_exemplar: string; p_usuario_sistema?: string }
@@ -336,6 +597,7 @@ export type Database = {
         Args: { p_autor: string; p_titulo?: string }
         Returns: string
       }
+      get_current_user_papel: { Args: never; Returns: string }
       renovar_emprestimo: {
         Args: { p_id_emprestimo: number; p_usuario_sistema?: string }
         Returns: Json
