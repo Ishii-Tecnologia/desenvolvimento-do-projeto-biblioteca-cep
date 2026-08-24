@@ -12,8 +12,10 @@ import {
   UserCog,
   RefreshCw,
   AlertCircle,
+  UserPlus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { UserModal } from '@/components/UserModal'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -57,6 +59,7 @@ export default function Usuarios() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [userModalOpen, setUserModalOpen] = useState(false)
 
   const fetchProfiles = async () => {
     setLoading(true)
@@ -253,6 +256,14 @@ export default function Usuarios() {
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             Atualizar
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => setUserModalOpen(true)}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium gap-1.5 shadow-xs"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            Novo Usuário
           </Button>
         </div>
       </div>
@@ -510,6 +521,9 @@ export default function Usuarios() {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de Criação de Usuário */}
+      <UserModal open={userModalOpen} onOpenChange={setUserModalOpen} onSuccess={fetchProfiles} />
     </div>
   )
 }
