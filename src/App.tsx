@@ -4,6 +4,7 @@ import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AuthProvider } from '@/hooks/use-auth'
 import Layout from './components/Layout'
+import ProtectedRoute from './components/ProtectedRoute'
 import Index from './pages/Index'
 import Acervo from './pages/Acervo'
 import Emprestimos from './pages/Emprestimos'
@@ -23,15 +24,62 @@ const App = () => (
         <Sonner />
         <Layout>
           <Routes>
+            {/* Rotas Públicas */}
             <Route path="/" element={<Index />} />
             <Route path="/acervo" element={<Acervo />} />
-            <Route path="/emprestimos" element={<Emprestimos />} />
-            <Route path="/leitores" element={<Leitores />} />
-            <Route path="/reservas" element={<Reservas />} />
-            <Route path="/historico" element={<Historico />} />
-            <Route path="/usuarios" element={<Usuarios />} />
-            <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="/login" element={<Login />} />
+
+            {/* Rotas Autenticadas */}
+            <Route
+              path="/emprestimos"
+              element={
+                <ProtectedRoute>
+                  <Emprestimos />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reservas"
+              element={
+                <ProtectedRoute>
+                  <Reservas />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/leitores"
+              element={
+                <ProtectedRoute requireOperator>
+                  <Leitores />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/historico"
+              element={
+                <ProtectedRoute requireOperator>
+                  <Historico />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/usuarios"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <Usuarios />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/configuracoes"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <Configuracoes />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Fallback */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>

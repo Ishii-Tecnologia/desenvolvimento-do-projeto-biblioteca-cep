@@ -44,14 +44,26 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   const navItems = [
-    { to: '/', label: 'Início', icon: LayoutDashboard },
-    { to: '/acervo', label: 'Acervo de Livros', icon: BookOpen },
-    { to: '/emprestimos', label: 'Empréstimos', icon: Repeat, adminOnly: false },
-    { to: '/leitores', label: 'Leitores', icon: Users, operatorOnly: true },
-    { to: '/reservas', label: 'Reservas', icon: BookmarkCheck },
-    { to: '/historico', label: 'Histórico & Logs', icon: History, operatorOnly: true },
-    { to: '/usuarios', label: 'Usuários', icon: Shield, adminOnly: true },
-    { to: '/configuracoes', label: 'Configurações', icon: Settings, adminOnly: true },
+    { to: '/', label: 'Início', icon: LayoutDashboard, authRequired: false },
+    { to: '/acervo', label: 'Acervo de Livros', icon: BookOpen, authRequired: false },
+    { to: '/emprestimos', label: 'Empréstimos', icon: Repeat, authRequired: true },
+    { to: '/reservas', label: 'Reservas', icon: BookmarkCheck, authRequired: true },
+    { to: '/leitores', label: 'Leitores', icon: Users, authRequired: true, operatorOnly: true },
+    {
+      to: '/historico',
+      label: 'Histórico & Logs',
+      icon: History,
+      authRequired: true,
+      operatorOnly: true,
+    },
+    { to: '/usuarios', label: 'Usuários', icon: Shield, authRequired: true, adminOnly: true },
+    {
+      to: '/configuracoes',
+      label: 'Configurações',
+      icon: Settings,
+      authRequired: true,
+      adminOnly: true,
+    },
   ]
 
   const getInitials = (name?: string) => {
@@ -93,6 +105,7 @@ export default function Layout({ children }: LayoutProps) {
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center gap-1">
               {navItems.map((item) => {
+                if (item.authRequired && !user) return null
                 if (item.adminOnly && !isAdmin) return null
                 if (item.operatorOnly && !isOperadorOrAdmin) return null
                 const Icon = item.icon
@@ -169,6 +182,28 @@ export default function Layout({ children }: LayoutProps) {
                         Empréstimos
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/reservas" className="cursor-pointer">
+                        <BookmarkCheck className="w-4 h-4 mr-2" />
+                        Reservas
+                      </Link>
+                    </DropdownMenuItem>
+                    {isOperadorOrAdmin && (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link to="/leitores" className="cursor-pointer">
+                            <Users className="w-4 h-4 mr-2" />
+                            Leitores
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/historico" className="cursor-pointer">
+                            <History className="w-4 h-4 mr-2" />
+                            Histórico & Logs
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     {isAdmin && (
                       <>
                         <DropdownMenuItem asChild>
@@ -229,6 +264,7 @@ export default function Layout({ children }: LayoutProps) {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-1">
             {navItems.map((item) => {
+              if (item.authRequired && !user) return null
               if (item.adminOnly && !isAdmin) return null
               if (item.operatorOnly && !isOperadorOrAdmin) return null
               const Icon = item.icon

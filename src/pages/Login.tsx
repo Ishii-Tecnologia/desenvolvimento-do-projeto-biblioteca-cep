@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,6 +20,8 @@ export default function Login() {
   const { signIn, signUp, user } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
+  const location = useLocation()
+  const from = (location.state as any)?.from?.pathname || '/'
 
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login')
@@ -36,9 +38,9 @@ export default function Login() {
   // If already logged in, redirect
   React.useEffect(() => {
     if (user) {
-      navigate('/')
+      navigate(from, { replace: true })
     }
-  }, [user, navigate])
+  }, [user, navigate, from])
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -61,7 +63,7 @@ export default function Login() {
         })
       } else {
         toast({ title: 'Bem-vindo!', description: 'Login realizado com sucesso.' })
-        navigate('/')
+        navigate(from, { replace: true })
       }
     } finally {
       setLoading(false)
@@ -93,7 +95,7 @@ export default function Login() {
           title: 'Conta criada!',
           description: 'Cadastro realizado com sucesso. Você já pode acessar.',
         })
-        navigate('/')
+        navigate(from, { replace: true })
       }
     } finally {
       setLoading(false)
