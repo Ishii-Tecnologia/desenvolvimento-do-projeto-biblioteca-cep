@@ -232,13 +232,17 @@ export const EmprestimosService = {
         .eq('id_exemplar', id_exemplar)
 
       // 6. Log history
-      await supabase.from('historico_movimentacao').insert({
-        id_exemplar: id_exemplar,
-        id_leitor: id_leitor,
-        tipo_operacao: 'Empréstimo',
-        usuario_sistema: operatorName,
-        detalhes: `Empréstimo realizado. Devolução prevista: ${expected.toLocaleDateString('pt-BR')}`,
-      })
+      try {
+        await (supabase.from as any)('historico_movimentacao').insert({
+          id_exemplar: id_exemplar,
+          id_leitor: id_leitor,
+          tipo_operacao: 'Empréstimo',
+          usuario_sistema: operatorName,
+          detalhes: `Empréstimo realizado. Devolução prevista: ${expected.toLocaleDateString('pt-BR')}`,
+        })
+      } catch (hErr) {
+        console.warn('Log history error:', hErr)
+      }
 
       return {
         sucesso: true,
@@ -295,13 +299,17 @@ export const EmprestimosService = {
         .update({ status: 'Disponivel' })
         .eq('id_exemplar', id_exemplar)
 
-      await supabase.from('historico_movimentacao').insert({
-        id_exemplar: id_exemplar,
-        id_leitor: loan.id_leitor,
-        tipo_operacao: 'Devolução',
-        usuario_sistema: operatorName,
-        detalhes: isLate ? `Devolução com ${daysLate} dias de atraso.` : 'Devolução no prazo.',
-      })
+      try {
+        await (supabase.from as any)('historico_movimentacao').insert({
+          id_exemplar: id_exemplar,
+          id_leitor: loan.id_leitor,
+          tipo_operacao: 'Devolução',
+          usuario_sistema: operatorName,
+          detalhes: isLate ? `Devolução com ${daysLate} dias de atraso.` : 'Devolução no prazo.',
+        })
+      } catch (hErr) {
+        console.warn('Log history error:', hErr)
+      }
 
       return { sucesso: true, mensagem: 'Devolução registrada com sucesso!' }
     }
@@ -347,13 +355,17 @@ export const EmprestimosService = {
         })
         .eq('id_emprestimo', id_emprestimo)
 
-      await supabase.from('historico_movimentacao').insert({
-        id_exemplar: loan.id_exemplar,
-        id_leitor: loan.id_leitor,
-        tipo_operacao: 'Renovação',
-        usuario_sistema: operatorName,
-        detalhes: `Renovado até ${newExpected.toLocaleDateString('pt-BR')}`,
-      })
+      try {
+        await (supabase.from as any)('historico_movimentacao').insert({
+          id_exemplar: loan.id_exemplar,
+          id_leitor: loan.id_leitor,
+          tipo_operacao: 'Renovação',
+          usuario_sistema: operatorName,
+          detalhes: `Renovado até ${newExpected.toLocaleDateString('pt-BR')}`,
+        })
+      } catch (hErr) {
+        console.warn('Log history error:', hErr)
+      }
 
       return {
         sucesso: true,

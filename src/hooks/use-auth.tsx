@@ -145,6 +145,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     })
 
     if (!error && data.user) {
+      // Auto confirm email via RPC for immediate login
+      try {
+        await (supabase.rpc as any)('confirm_user_email', { user_id: data.user.id })
+      } catch (rpcErr) {
+        console.warn('Could not auto-confirm reader email via RPC:', rpcErr)
+      }
+
       // Auto create reader entry
       try {
         await supabase.from('leitor').insert({

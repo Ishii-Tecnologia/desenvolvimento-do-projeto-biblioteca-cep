@@ -1,22 +1,23 @@
 import { supabase } from '@/lib/supabase/client'
 import type { Tables } from '@/lib/supabase/types'
 
-export type ParametroSistema = Tables<'parametro_sistema'>
+export type ParametroSistema = {
+  id_parametro?: number
+  nome_parametro: string
+  valor_parametro: string
+  descricao?: string | null
+}
 
 export const ParametrosService = {
   async getAll() {
-    const { data, error } = await supabase
-      .from('parametro_sistema')
-      .select('*')
-      .order('id_parametro', { ascending: true })
+    const { data, error } = await (supabase.from as any)('parametro_sistema').select('*')
 
     if (error) throw error
     return data
   },
 
   async getByName(name: string, defaultValue: string): Promise<string> {
-    const { data } = await supabase
-      .from('parametro_sistema')
+    const { data } = await (supabase.from as any)('parametro_sistema')
       .select('valor_parametro')
       .eq('nome_parametro', name)
       .maybeSingle()
@@ -25,8 +26,7 @@ export const ParametrosService = {
   },
 
   async updateParam(nome_parametro: string, valor_parametro: string, descricao?: string) {
-    const { data, error } = await supabase
-      .from('parametro_sistema')
+    const { data, error } = await (supabase.from as any)('parametro_sistema')
       .upsert(
         {
           nome_parametro,

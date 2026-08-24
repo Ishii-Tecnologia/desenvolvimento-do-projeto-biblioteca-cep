@@ -118,6 +118,13 @@ export function UserModal({ open, onOpenChange, onSuccess }: UserModalProps) {
       const userId = authData.user?.id
 
       if (userId) {
+        // Confirmar email via RPC (garantia extra além do trigger BEFORE INSERT)
+        try {
+          await (supabase.rpc as any)('confirm_user_email', { user_id: userId })
+        } catch (rpcErr) {
+          console.warn('Aviso confirm_user_email RPC:', rpcErr)
+        }
+
         // 2. Atualizar/Inserir na tabela profiles
         const { error: profileError } = await supabase.from('profiles').upsert(
           {

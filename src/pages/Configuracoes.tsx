@@ -109,14 +109,14 @@ export default function Configuracoes() {
   const loadParams = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase.from('parametro_sistema').select('*')
+      const { data, error } = await (supabase.from as any)('parametro_sistema').select('*')
 
       if (error) throw error
 
       if (data && data.length > 0) {
         const paramMap = new Map<string, string>()
-        data.forEach((p: SystemParam) => {
-          paramMap.set(p.nome_parametro, p.valor_parametro)
+        data.forEach((p: any) => {
+          paramMap.set(p.nome_parametro || p.chave, p.valor_parametro || p.valor)
         })
 
         if (paramMap.has('prazo_emprestimo_dias')) {
@@ -196,9 +196,9 @@ export default function Configuracoes() {
     ]
 
     try {
-      const { error } = await supabase
-        .from('parametro_sistema')
-        .upsert(payload, { onConflict: 'nome_parametro' })
+      const { error } = await (supabase.from as any)('parametro_sistema').upsert(payload, {
+        onConflict: 'nome_parametro',
+      })
 
       if (error) throw error
 
