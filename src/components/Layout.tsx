@@ -50,6 +50,7 @@ export default function Layout({ children }: LayoutProps) {
     { to: '/leitores', label: 'Leitores', icon: Users, operatorOnly: true },
     { to: '/reservas', label: 'Reservas', icon: BookmarkCheck },
     { to: '/historico', label: 'Histórico & Logs', icon: History, operatorOnly: true },
+    { to: '/usuarios', label: 'Usuários', icon: Shield, adminOnly: true },
     { to: '/configuracoes', label: 'Configurações', icon: Settings, adminOnly: true },
   ]
 
@@ -169,12 +170,20 @@ export default function Layout({ children }: LayoutProps) {
                       </Link>
                     </DropdownMenuItem>
                     {isAdmin && (
-                      <DropdownMenuItem asChild>
-                        <Link to="/configuracoes" className="cursor-pointer">
-                          <Settings className="w-4 h-4 mr-2" />
-                          Configurações
-                        </Link>
-                      </DropdownMenuItem>
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link to="/usuarios" className="cursor-pointer">
+                            <Shield className="w-4 h-4 mr-2" />
+                            Usuários
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/configuracoes" className="cursor-pointer">
+                            <Settings className="w-4 h-4 mr-2" />
+                            Configurações
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
                     )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem

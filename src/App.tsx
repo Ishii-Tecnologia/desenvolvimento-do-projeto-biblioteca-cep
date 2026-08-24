@@ -11,6 +11,7 @@ import Leitores from './pages/Leitores'
 import Reservas from './pages/Reservas'
 import Historico from './pages/Historico'
 import Configuracoes from './pages/Configuracoes'
+import Usuarios from './pages/Usuarios'
 import Login from './pages/Login'
 import NotFound from './pages/NotFound'
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/leitores" element={<Leitores />} />
             <Route path="/reservas" element={<Reservas />} />
             <Route path="/historico" element={<Historico />} />
+            <Route path="/usuarios" element={<Usuarios />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="/login" element={<Login />} />
             <Route path="*" element={<NotFound />} />

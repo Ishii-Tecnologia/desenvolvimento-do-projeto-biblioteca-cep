@@ -24,11 +24,17 @@ export const ParametrosService = {
     return data?.valor_parametro || defaultValue
   },
 
-  async updateParam(nome_parametro: string, valor_parametro: string) {
+  async updateParam(nome_parametro: string, valor_parametro: string, descricao?: string) {
     const { data, error } = await supabase
       .from('parametro_sistema')
-      .update({ valor_parametro })
-      .eq('nome_parametro', nome_parametro)
+      .upsert(
+        {
+          nome_parametro,
+          valor_parametro,
+          ...(descricao ? { descricao } : {}),
+        },
+        { onConflict: 'nome_parametro' },
+      )
       .select()
       .single()
 
