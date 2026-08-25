@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,6 +16,21 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Library, LogIn, UserPlus, Loader2, Shield, User } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+
+const SEED_USERS = [
+  {
+    email: 'admin@cep.edu.br',
+    password: 'Skip@Pass',
+    nome: 'Profª Helena Vasconcelos',
+    papel: 'admin' as const,
+  },
+  {
+    email: 'leitor@cep.edu.br',
+    password: 'Skip@Pass',
+    nome: 'Lucas Mendes',
+    papel: 'leitor' as const,
+  },
+]
 
 export default function Login() {
   const { signIn, signUp, quickLoginAs, user } = useAuth()
@@ -34,6 +50,94 @@ export default function Login() {
   const [regName, setRegName] = useState('')
   const [regEmail, setRegEmail] = useState('')
   const [regPassword, setRegPassword] = useState('')
+
+  // Seeding initial users if not created yet (runs only once via localStorage)
+  useEffect(() => {
+    const seedInitialUsers = async () => {
+      const alreadySeeded = localStorage.getItem('seed-users-created')
+      if (alreadySeeded) return
+
+      try {
+        for (const seedUser of SEED_USERS) {
+          try {
+            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+              email: seedUser.email,
+              password: seedUser.password,
+              options: {
+                data: {
+                  nome: seedUser.nome,
+                  full_name: seedUser.nome,
+                  papel: seedUser.papel,
+                  role: seedUser.papel,
+                  app_role: seedUser.papel,
+                },
+              },
+            })
+
+            if (signUpError) {
+              // If already registered, ignore and continue
+              console.log(`Seed user ${seedUser.email} signUp status:`, signUpError.message)
+            }
+
+            const userId = signUpData?.user?.id
+            if (userId) {
+              // Confirm email via RPC
+              try {
+                await (supabase.rpc as any)('confirm_user_email', { user_id: userId })
+              } catch (rpcErr) {
+                console.warn(`RPC confirm_user_email warning for ${seedUser.email}:`, rpcErr)
+              }
+
+              // Ensure profile entry exists
+              try {
+                await supabase.from('profiles').upsert(
+                  {
+                    id: userId,
+                    nome: seedUser.nome,
+                    full_name: seedUser.nome,
+                    email: seedUser.email,
+                    papel: seedUser.papel,
+                    role: seedUser.papel,
+                    bloqueado: false,
+                  },
+                  { onConflict: 'id' },
+                )
+              } catch (profileErr) {
+                console.warn(`Profiles upsert warning for ${seedUser.email}:`, profileErr)
+              }
+
+              // If leitor, ensure leitor entry exists
+              if (seedUser.papel === 'leitor') {
+                try {
+                  await supabase.from('leitor').upsert(
+                    {
+                      id_auth: userId,
+                      nome_do_leitor: seedUser.nome,
+                      email: seedUser.email,
+                      cpf: '',
+                      data_cadastro: new Date().toISOString().split('T')[0],
+                      bloqueado: false,
+                    },
+                    { onConflict: 'id_auth' },
+                  )
+                } catch (leitorErr) {
+                  console.warn(`Leitor upsert warning for ${seedUser.email}:`, leitorErr)
+                }
+              }
+            }
+          } catch (itemErr) {
+            console.warn(`Error seeding user ${seedUser.email}:`, itemErr)
+          }
+        }
+
+        localStorage.setItem('seed-users-created', 'true')
+      } catch (err) {
+        console.warn('Error in seed users routine:', err)
+      }
+    }
+
+    seedInitialUsers()
+  }, [])
 
   // If already logged in, redirect
   React.useEffect(() => {
