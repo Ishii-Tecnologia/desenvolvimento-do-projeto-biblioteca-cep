@@ -28,11 +28,13 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: 'toast-theme-teal border-[#136b77]/20 bg-[#136b77] text-white shadow-[#136b77]/25',
-        success: 'toast-theme-teal border-[#136b77]/30 bg-[#136b77] text-white shadow-[#136b77]/30',
-        info: 'toast-theme-cream border-[#e2d5c3] bg-[#fdf8f1] text-[#2c3e44] shadow-[#8d775f]/15',
+        default:
+          'toast-theme-teal border-[#136b77]/30 bg-[#136b77] text-[#ffffff] shadow-lg shadow-[#136b77]/25',
+        success:
+          'toast-theme-teal border-[#136b77]/30 bg-[#136b77] text-[#ffffff] shadow-lg shadow-[#136b77]/25',
+        info: 'toast-theme-cream border-[#ebdcc8] bg-[#fdf8f1] text-[#ffffff] [text-shadow:_0_1px_2px_rgba(40,30,20,0.35),_0_0_1px_rgba(40,30,20,0.6)] shadow-lg shadow-[#8d775f]/15',
         destructive:
-          'toast-theme-destructive border-rose-700 bg-rose-700 text-white shadow-rose-900/25',
+          'toast-theme-destructive border-rose-700 bg-rose-700 text-[#ffffff] shadow-lg shadow-rose-900/25',
       },
     },
     defaultVariants: {
@@ -77,7 +79,7 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      'absolute right-3.5 top-3.5 rounded-sm p-1 text-[#b89535] opacity-90 transition-all hover:opacity-100 hover:scale-110 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-[#b89535] group-hover:opacity-100 group-[.toast-theme-cream]:text-[#8b6914] group-[.toast-theme-destructive]:text-rose-200 group-[.toast-theme-destructive]:hover:text-white',
+      'absolute right-3.5 top-3.5 rounded-sm p-1 text-[#d4af37] transition-all hover:opacity-100 hover:scale-110 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-[#d4af37] group-hover:opacity-100 group-[.toast-theme-destructive]:text-rose-200 group-[.toast-theme-destructive]:hover:text-white',
       className,
     )}
     toast-close=""

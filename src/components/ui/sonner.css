@@ -17,8 +17,11 @@ section[aria-label^='Notifications'] {
 [data-sonner-toast][data-type='info'],
 [data-sonner-toast][data-type='warning'] {
   background-color: #fdf8f1 !important;
-  color: #2c3e44 !important;
-  border-color: #e2d5c3 !important;
+  color: #ffffff !important;
+  text-shadow:
+    0 1px 2px rgba(40, 30, 20, 0.35),
+    0 0 1px rgba(40, 30, 20, 0.6) !important;
+  border-color: #ebdcc8 !important;
 }
 
 [data-sonner-toast][data-type='error'] {
@@ -28,5 +31,5 @@ section[aria-label^='Notifications'] {
 }
 
 [data-sonner-toast] [data-close-button] {
-  color: #b89535 !important;
+  color: #d4af37 !important;
 }
