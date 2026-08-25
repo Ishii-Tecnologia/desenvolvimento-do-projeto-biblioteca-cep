@@ -54,7 +54,7 @@ export default function Login() {
   // Seeding initial users if not created yet (runs only once via localStorage)
   useEffect(() => {
     const seedInitialUsers = async () => {
-      const alreadySeeded = localStorage.getItem('seed-users-created')
+      const alreadySeeded = localStorage.getItem('seed-users-v2-created')
       if (alreadySeeded) return
 
       try {
@@ -130,7 +130,7 @@ export default function Login() {
           }
         }
 
-        localStorage.setItem('seed-users-created', 'true')
+        localStorage.setItem('seed-users-v2-created', 'true')
       } catch (err) {
         console.warn('Error in seed users routine:', err)
       }
