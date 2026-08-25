@@ -13,6 +13,7 @@ import {
   RefreshCw,
   AlertCircle,
   UserPlus,
+  Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserModal } from '@/components/UserModal'
@@ -181,6 +182,48 @@ export default function Usuarios() {
       toast({
         title: 'Erro ao alterar status',
         description: err.message || 'Falha ao alterar status de bloqueio.',
+        variant: 'destructive',
+      })
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  const handleDeleteUser = async (profile: ProfileRecord) => {
+    if (isSelf(profile)) {
+      toast({
+        title: 'Ação não permitida',
+        description: 'Você não pode excluir o seu próprio usuário.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    const displayName = profile.nome || profile.full_name || profile.email
+    if (
+      !window.confirm(
+        `Tem certeza que deseja excluir o usuário "${displayName}"? Esta ação não pode ser desfeita.`,
+      )
+    ) {
+      return
+    }
+
+    setUpdatingId(profile.id)
+    try {
+      const { error } = await supabase.from('profiles').delete().eq('id', profile.id)
+
+      if (error) throw error
+
+      setProfiles((prev) => prev.filter((p) => p.id !== profile.id))
+
+      toast({
+        title: 'Usuário excluído',
+        description: `O usuário ${displayName} foi excluído com sucesso.`,
+      })
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao excluir usuário',
+        description: err.message || 'Falha ao excluir o usuário da base de dados.',
         variant: 'destructive',
       })
     } finally {
@@ -508,6 +551,18 @@ export default function Usuarios() {
                                     Bloquear Usuário
                                   </>
                                 )}
+                              </DropdownMenuItem>
+
+                              <DropdownMenuSeparator />
+
+                              {/* Excluir Usuário */}
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteUser(p)}
+                                disabled={isCurrentUser}
+                                className="text-xs cursor-pointer text-rose-600 focus:text-rose-700 focus:bg-rose-50"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 mr-2 text-rose-600" />
+                                Excluir Usuário
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
