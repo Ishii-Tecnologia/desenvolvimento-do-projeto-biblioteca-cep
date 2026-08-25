@@ -210,7 +210,9 @@ export default function Usuarios() {
 
     setUpdatingId(profile.id)
     try {
-      const { error } = await supabase.from('profiles').delete().eq('id', profile.id)
+      const { data, error } = await (supabase.rpc as any)('delete_user', {
+        target_user_id: profile.id,
+      })
 
       if (error) throw error
 
@@ -218,12 +220,12 @@ export default function Usuarios() {
 
       toast({
         title: 'Usuário excluído',
-        description: `O usuário ${displayName} foi excluído com sucesso.`,
+        description: `O usuário ${displayName} foi excluído com sucesso da base de dados e do sistema de autenticação.`,
       })
     } catch (err: any) {
       toast({
         title: 'Erro ao excluir usuário',
-        description: err.message || 'Falha ao excluir o usuário da base de dados.',
+        description: err.message || 'Falha ao excluir o usuário do sistema.',
         variant: 'destructive',
       })
     } finally {
