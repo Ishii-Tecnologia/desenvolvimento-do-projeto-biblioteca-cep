@@ -24,10 +24,11 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 
 interface SystemParam {
-  id_parametro?: number
-  nome_parametro: string
-  valor_parametro: string
+  id?: string
+  chave: string
+  valor: string
   descricao?: string | null
+  updated_at?: string
 }
 
 const DEFAULT_PARAMS: Record<
@@ -109,14 +110,14 @@ export default function Configuracoes() {
   const loadParams = async () => {
     setLoading(true)
     try {
-      const { data, error } = await (supabase.from as any)('parametro_sistema').select('*')
+      const { data, error } = await supabase.from('parametros').select('*')
 
       if (error) throw error
 
       if (data && data.length > 0) {
         const paramMap = new Map<string, string>()
-        data.forEach((p: any) => {
-          paramMap.set(p.nome_parametro || p.chave, p.valor_parametro || p.valor)
+        data.forEach((p) => {
+          paramMap.set(p.chave, p.valor)
         })
 
         if (paramMap.has('prazo_emprestimo_dias')) {
@@ -163,41 +164,37 @@ export default function Configuracoes() {
 
     const payload = [
       {
-        nome_parametro: 'prazo_emprestimo_dias',
-        valor_parametro: String(
-          prazoEmprestimoDias || DEFAULT_PARAMS.prazo_emprestimo_dias.defaultValue,
-        ),
+        chave: 'prazo_emprestimo_dias',
+        valor: String(prazoEmprestimoDias || DEFAULT_PARAMS.prazo_emprestimo_dias.defaultValue),
         descricao: DEFAULT_PARAMS.prazo_emprestimo_dias.description,
       },
       {
-        nome_parametro: 'max_renovacoes',
-        valor_parametro: String(maxRenovacoes || DEFAULT_PARAMS.max_renovacoes.defaultValue),
+        chave: 'max_renovacoes',
+        valor: String(maxRenovacoes || DEFAULT_PARAMS.max_renovacoes.defaultValue),
         descricao: DEFAULT_PARAMS.max_renovacoes.description,
       },
       {
-        nome_parametro: 'max_exemplares_por_leitor',
-        valor_parametro: String(
+        chave: 'max_exemplares_por_leitor',
+        valor: String(
           maxExemplaresPorLeitor || DEFAULT_PARAMS.max_exemplares_por_leitor.defaultValue,
         ),
         descricao: DEFAULT_PARAMS.max_exemplares_por_leitor.description,
       },
       {
-        nome_parametro: 'prazo_reserva_dias',
-        valor_parametro: String(prazoReservaDias || DEFAULT_PARAMS.prazo_reserva_dias.defaultValue),
+        chave: 'prazo_reserva_dias',
+        valor: String(prazoReservaDias || DEFAULT_PARAMS.prazo_reserva_dias.defaultValue),
         descricao: DEFAULT_PARAMS.prazo_reserva_dias.description,
       },
       {
-        nome_parametro: 'nome_biblioteca',
-        valor_parametro: String(
-          nomeBiblioteca || DEFAULT_PARAMS.nome_biblioteca.defaultValue,
-        ).trim(),
+        chave: 'nome_biblioteca',
+        valor: String(nomeBiblioteca || DEFAULT_PARAMS.nome_biblioteca.defaultValue).trim(),
         descricao: DEFAULT_PARAMS.nome_biblioteca.description,
       },
     ]
 
     try {
-      const { error } = await (supabase.from as any)('parametro_sistema').upsert(payload, {
-        onConflict: 'nome_parametro',
+      const { error } = await supabase.from('parametros').upsert(payload, {
+        onConflict: 'chave',
       })
 
       if (error) throw error
@@ -303,7 +300,7 @@ export default function Configuracoes() {
                     {DEFAULT_PARAMS.nome_biblioteca.label}
                   </Label>
                   <span className="text-[11px] text-slate-400 font-mono">
-                    nome_parametro: nome_biblioteca
+                    chave: nome_biblioteca
                   </span>
                 </div>
                 <Input

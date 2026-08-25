@@ -1,39 +1,36 @@
 import { supabase } from '@/lib/supabase/client'
 import type { Tables } from '@/lib/supabase/types'
 
-export type ParametroSistema = {
-  id_parametro?: number
-  nome_parametro: string
-  valor_parametro: string
-  descricao?: string | null
-}
+export type Parametro = Tables<'parametros'>
 
 export const ParametrosService = {
   async getAll() {
-    const { data, error } = await (supabase.from as any)('parametro_sistema').select('*')
+    const { data, error } = await supabase.from('parametros').select('*')
 
     if (error) throw error
     return data
   },
 
   async getByName(name: string, defaultValue: string): Promise<string> {
-    const { data } = await (supabase.from as any)('parametro_sistema')
-      .select('valor_parametro')
-      .eq('nome_parametro', name)
+    const { data } = await supabase
+      .from('parametros')
+      .select('valor')
+      .eq('chave', name)
       .maybeSingle()
 
-    return data?.valor_parametro || defaultValue
+    return data?.valor || defaultValue
   },
 
-  async updateParam(nome_parametro: string, valor_parametro: string, descricao?: string) {
-    const { data, error } = await (supabase.from as any)('parametro_sistema')
+  async updateParam(chave: string, valor: string, descricao?: string) {
+    const { data, error } = await supabase
+      .from('parametros')
       .upsert(
         {
-          nome_parametro,
-          valor_parametro,
+          chave,
+          valor,
           ...(descricao ? { descricao } : {}),
         },
-        { onConflict: 'nome_parametro' },
+        { onConflict: 'chave' },
       )
       .select()
       .single()
