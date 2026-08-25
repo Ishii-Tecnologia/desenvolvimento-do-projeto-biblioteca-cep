@@ -170,36 +170,6 @@ export type Database = {
         }
         Relationships: []
       }
-      leitores: {
-        Row: {
-          bloqueado: boolean
-          created_at: string
-          email: string
-          endereco: string | null
-          id: string
-          nome: string
-          telefone: string | null
-        }
-        Insert: {
-          bloqueado?: boolean
-          created_at?: string
-          email: string
-          endereco?: string | null
-          id?: string
-          nome: string
-          telefone?: string | null
-        }
-        Update: {
-          bloqueado?: boolean
-          created_at?: string
-          email?: string
-          endereco?: string | null
-          id?: string
-          nome?: string
-          telefone?: string | null
-        }
-        Relationships: []
-      }
       parametros: {
         Row: {
           chave: string
