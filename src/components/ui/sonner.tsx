@@ -14,14 +14,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
       className="toaster group"
       toastOptions={{
         classNames: {
-          toast:
-            'group toast rounded-2xl border p-4 shadow-xl font-sans',
+          toast: 'group toast rounded-2xl border p-4 shadow-xl font-sans',
           default:
             'border-[#136b77]/20 bg-[#136b77] text-white shadow-[#136b77]/25 [&_[data-close-button]]:text-[#b89535] [&_[data-description]]:text-white/90',
           success:
             'border-[#136b77]/30 bg-[#136b77] text-white shadow-[#136b77]/30 [&_[data-close-button]]:text-[#b89535] [&_[data-description]]:text-white/90',
-          info:
-            'border-[#e2d5c3] bg-[#fdf8f1] text-[#2c3e44] shadow-[#8d775f]/15 [&_[data-close-button]]:text-[#8b6914] [&_[data-description]]:text-[#3d535b]',
+          info: 'border-[#e2d5c3] bg-[#fdf8f1] text-[#2c3e44] shadow-[#8d775f]/15 [&_[data-close-button]]:text-[#8b6914] [&_[data-description]]:text-[#3d535b]',
           warning:
             'border-[#e2d5c3] bg-[#fdf8f1] text-[#2c3e44] shadow-[#8d775f]/15 [&_[data-close-button]]:text-[#8b6914] [&_[data-description]]:text-[#3d535b]',
           error:

@@ -226,6 +226,7 @@ export default function Configuracoes() {
     toast({
       title: 'Valores padrão restaurados no formulário',
       description: 'Clique em "Salvar Configurações" para gravar as alterações no sistema.',
+      variant: 'info',
     })
   }
 
@@ -238,6 +239,7 @@ export default function Configuracoes() {
       toast({
         title: 'Rotina executada',
         description: `Verificação de atrasos concluída (${data ?? 0} registros avaliados/atualizados).`,
+        variant: 'info',
       })
     } catch (err: any) {
       toast({
