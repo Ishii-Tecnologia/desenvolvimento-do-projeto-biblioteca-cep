@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Users,
   Search,
@@ -20,6 +21,7 @@ import {
   Phone,
 } from 'lucide-react'
 import { ReaderModal } from '@/components/ReaderModal'
+import { ConfirmModal } from '@/components/ConfirmModal'
 import { useToast } from '@/hooks/use-toast'
 
 export default function Leitores() {
@@ -33,6 +35,22 @@ export default function Leitores() {
 
   const [readerModalOpen, setReaderModalOpen] = useState(false)
   const [readerToEdit, setReaderToEdit] = useState<Leitor | null>(null)
+
+  // Confirm modals state
+  const [blockConfirmOpen, setBlockConfirmOpen] = useState(false)
+  const [readerToToggleBlock, setReaderToToggleBlock] = useState<LeitorWithStats | null>(null)
+  const [blockLoading, setBlockLoading] = useState(false)
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [readerToDelete, setReaderToDelete] = useState<LeitorWithStats | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const getInitials = (name?: string) => {
+    if (!name) return 'L'
+    const parts = name.trim().split(' ')
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+    return name.substring(0, 2).toUpperCase()
+  }
 
   const loadReaders = async () => {
     setLoading(true)
@@ -59,16 +77,25 @@ export default function Leitores() {
     loadReaders()
   }
 
-  const handleToggleBlock = async (reader: LeitorWithStats) => {
-    const action = reader.bloqueado ? 'desbloquear' : 'bloquear'
-    if (!confirm(`Deseja ${action} o leitor ${reader.nome_do_leitor}?`)) return
+  const handleToggleBlock = (reader: LeitorWithStats) => {
+    setReaderToToggleBlock(reader)
+    setBlockConfirmOpen(true)
+  }
 
+  const executeToggleBlock = async () => {
+    if (!readerToToggleBlock) return
+    setBlockLoading(true)
     try {
-      await LeitoresService.toggleBlock(reader.id_leitor, reader.bloqueado)
+      await LeitoresService.toggleBlock(
+        readerToToggleBlock.id_leitor,
+        readerToToggleBlock.bloqueado,
+      )
       toast({
-        title: reader.bloqueado ? 'Leitor desbloqueado' : 'Leitor bloqueado',
-        description: `O status do leitor foi atualizado com sucesso.`,
+        title: readerToToggleBlock.bloqueado ? 'Leitor desbloqueado' : 'Leitor bloqueado',
+        description: `O status do leitor ${readerToToggleBlock.nome_do_leitor} foi atualizado com sucesso.`,
       })
+      setBlockConfirmOpen(false)
+      setReaderToToggleBlock(null)
       loadReaders()
     } catch (err: any) {
       toast({
@@ -76,17 +103,27 @@ export default function Leitores() {
         description: err.message,
         variant: 'destructive',
       })
+    } finally {
+      setBlockLoading(false)
     }
   }
 
-  const handleDelete = async (reader: LeitorWithStats) => {
-    if (!confirm(`Deseja realmente remover o leitor ${reader.nome_do_leitor}?`)) return
+  const handleDelete = (reader: LeitorWithStats) => {
+    setReaderToDelete(reader)
+    setDeleteConfirmOpen(true)
+  }
+
+  const executeDelete = async () => {
+    if (!readerToDelete) return
+    setDeleteLoading(true)
     try {
-      await LeitoresService.delete(reader.id_leitor)
+      await LeitoresService.delete(readerToDelete.id_leitor)
       toast({
         title: 'Leitor removido',
-        description: 'Cadastro excluído com sucesso.',
+        description: `O cadastro de ${readerToDelete.nome_do_leitor} foi excluído com sucesso.`,
       })
+      setDeleteConfirmOpen(false)
+      setReaderToDelete(null)
       loadReaders()
     } catch (err: any) {
       toast({
@@ -94,6 +131,8 @@ export default function Leitores() {
         description: err.message || 'Verifique se não há empréstimos pendentes.',
         variant: 'destructive',
       })
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -203,24 +242,38 @@ export default function Leitores() {
               }`}
             >
               <div className="p-4 space-y-3">
-                {/* Header */}
+                {/* Header with Photo */}
                 <div className="flex items-start justify-between gap-2">
-                  <div className="space-y-0.5">
-                    <span className="font-mono text-[10px] text-slate-400">
-                      ID #{reader.id_leitor}
-                    </span>
-                    <h3 className="font-bold text-slate-900 text-sm leading-tight line-clamp-1">
-                      {reader.nome_do_leitor}
-                    </h3>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-10 h-10 border border-slate-200 shrink-0">
+                      {reader.foto && (
+                        <AvatarImage
+                          src={reader.foto}
+                          alt={reader.nome_do_leitor || ''}
+                          className="object-cover"
+                        />
+                      )}
+                      <AvatarFallback className="bg-emerald-100 text-emerald-800 text-xs font-bold">
+                        {getInitials(reader.nome_do_leitor || '')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="space-y-0.5 min-w-0">
+                      <span className="font-mono text-[10px] text-slate-400">
+                        ID #{reader.id_leitor}
+                      </span>
+                      <h3 className="font-bold text-slate-900 text-sm leading-tight line-clamp-1">
+                        {reader.nome_do_leitor}
+                      </h3>
+                    </div>
                   </div>
 
                   {reader.bloqueado ? (
-                    <Badge className="bg-rose-100 text-rose-800 border-rose-200 text-[10px] gap-1">
+                    <Badge className="bg-rose-100 text-rose-800 border-rose-200 text-[10px] gap-1 shrink-0">
                       <Lock className="w-3 h-3 text-rose-600" />
                       Bloqueado
                     </Badge>
                   ) : (
-                    <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]">
+                    <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] shrink-0">
                       Ativo
                     </Badge>
                   )}
@@ -324,6 +377,32 @@ export default function Leitores() {
         onOpenChange={setReaderModalOpen}
         readerToEdit={readerToEdit}
         onSuccess={loadReaders}
+      />
+
+      <ConfirmModal
+        open={blockConfirmOpen}
+        onOpenChange={setBlockConfirmOpen}
+        title={readerToToggleBlock?.bloqueado ? 'Desbloquear Leitor' : 'Bloquear Leitor'}
+        description={
+          readerToToggleBlock?.bloqueado
+            ? `Deseja liberar o cadastro de ${readerToToggleBlock?.nome_do_leitor} para realizar novos empréstimos?`
+            : `Deseja bloquear o leitor ${readerToToggleBlock?.nome_do_leitor}? Ele não poderá retirar novos exemplares até ser desbloqueado.`
+        }
+        confirmLabel={readerToToggleBlock?.bloqueado ? 'Sim, Desbloquear' : 'Sim, Bloquear'}
+        variant={readerToToggleBlock?.bloqueado ? 'primary' : 'warning'}
+        loading={blockLoading}
+        onConfirm={executeToggleBlock}
+      />
+
+      <ConfirmModal
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Excluir Cadastro do Leitor"
+        description={`Deseja realmente remover o leitor ${readerToDelete?.nome_do_leitor}? Essa ação não poderá ser desfeita.`}
+        confirmLabel="Sim, Excluir Cadastro"
+        variant="destructive"
+        loading={deleteLoading}
+        onConfirm={executeDelete}
       />
     </div>
   )

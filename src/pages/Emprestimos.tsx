@@ -21,6 +21,7 @@ import {
   Book,
 } from 'lucide-react'
 import { LoanModal } from '@/components/LoanModal'
+import { ConfirmModal } from '@/components/ConfirmModal'
 import { useToast } from '@/hooks/use-toast'
 
 export default function Emprestimos() {
@@ -36,6 +37,13 @@ export default function Emprestimos() {
 
   const [loanModalOpen, setLoanModalOpen] = useState(false)
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null)
+
+  // Confirm modals state
+  const [returnConfirmOpen, setReturnConfirmOpen] = useState(false)
+  const [loanToReturn, setLoanToReturn] = useState<EmprestimoDetailed | null>(null)
+
+  const [renewConfirmOpen, setRenewConfirmOpen] = useState(false)
+  const [loanToRenew, setLoanToRenew] = useState<EmprestimoDetailed | null>(null)
 
   const loadLoans = async () => {
     setLoading(true)
@@ -62,22 +70,23 @@ export default function Emprestimos() {
     loadLoans()
   }
 
-  const handleReturn = async (loan: EmprestimoDetailed) => {
-    if (
-      !confirm(
-        `Confirmar devolução do exemplar ${loan.id_exemplar} ("${loan.exemplar?.titulo?.titulo_de_livro}")?`,
-      )
-    ) {
-      return
-    }
-    setActionLoadingId(loan.id_emprestimo)
+  const handleReturn = (loan: EmprestimoDetailed) => {
+    setLoanToReturn(loan)
+    setReturnConfirmOpen(true)
+  }
+
+  const executeReturn = async () => {
+    if (!loanToReturn) return
+    setActionLoadingId(loanToReturn.id_emprestimo)
     try {
       const operatorName = profile?.full_name || 'Operador'
-      await EmprestimosService.returnLoan(loan.id_exemplar, operatorName)
+      await EmprestimosService.returnLoan(loanToReturn.id_exemplar, operatorName)
       toast({
         title: 'Devolução registrada',
-        description: `Exemplar ${loan.id_exemplar} devolvido com sucesso!`,
+        description: `Exemplar ${loanToReturn.id_exemplar} devolvido com sucesso!`,
       })
+      setReturnConfirmOpen(false)
+      setLoanToReturn(null)
       loadLoans()
     } catch (err: any) {
       toast({
@@ -90,7 +99,7 @@ export default function Emprestimos() {
     }
   }
 
-  const handleRenew = async (loan: EmprestimoDetailed) => {
+  const handleRenew = (loan: EmprestimoDetailed) => {
     if (loan.numero_renovacoes >= 1) {
       toast({
         title: 'Limite atingido',
@@ -99,18 +108,22 @@ export default function Emprestimos() {
       })
       return
     }
-    if (!confirm(`Deseja renovar o empréstimo do exemplar ${loan.id_exemplar} por mais 15 dias?`)) {
-      return
-    }
+    setLoanToRenew(loan)
+    setRenewConfirmOpen(true)
+  }
 
-    setActionLoadingId(loan.id_emprestimo)
+  const executeRenew = async () => {
+    if (!loanToRenew) return
+    setActionLoadingId(loanToRenew.id_emprestimo)
     try {
       const operatorName = profile?.full_name || 'Operador'
-      const res = await EmprestimosService.renewLoan(loan.id_emprestimo, operatorName)
+      const res = await EmprestimosService.renewLoan(loanToRenew.id_emprestimo, operatorName)
       toast({
         title: 'Empréstimo renovado',
         description: `Prazo estendido com sucesso! Nova data: ${new Date(res.nova_data_prevista).toLocaleDateString('pt-BR')}`,
       })
+      setRenewConfirmOpen(false)
+      setLoanToRenew(null)
       loadLoans()
     } catch (err: any) {
       toast({
@@ -355,6 +368,28 @@ export default function Emprestimos() {
 
       {/* Modals */}
       <LoanModal open={loanModalOpen} onOpenChange={setLoanModalOpen} onSuccess={loadLoans} />
+
+      <ConfirmModal
+        open={returnConfirmOpen}
+        onOpenChange={setReturnConfirmOpen}
+        title="Registrar Devolução"
+        description={`Confirmar o recebimento e a devolução física do exemplar ${loanToReturn?.id_exemplar} ("${loanToReturn?.exemplar?.titulo?.titulo_de_livro}") emprestado para ${loanToReturn?.leitor?.nome_do_leitor}?`}
+        confirmLabel="Confirmar Devolução"
+        variant="primary"
+        loading={actionLoadingId === loanToReturn?.id_emprestimo}
+        onConfirm={executeReturn}
+      />
+
+      <ConfirmModal
+        open={renewConfirmOpen}
+        onOpenChange={setRenewConfirmOpen}
+        title="Renovar Prazo de Empréstimo"
+        description={`Deseja renovar o empréstimo do exemplar ${loanToRenew?.id_exemplar} ("${loanToRenew?.exemplar?.titulo?.titulo_de_livro}") por mais 15 dias corridos?`}
+        confirmLabel="Sim, Renovar (+15 dias)"
+        variant="primary"
+        loading={actionLoadingId === loanToRenew?.id_emprestimo}
+        onConfirm={executeRenew}
+      />
     </div>
   )
 }

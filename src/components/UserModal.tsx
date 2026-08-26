@@ -19,7 +19,9 @@ import {
 } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
-import { UserPlus, Loader2, Eye, EyeOff } from 'lucide-react'
+import { UserPlus, Loader2, Eye, EyeOff, Upload, Camera, X } from 'lucide-react'
+import { uploadImageToStorage } from '@/lib/image-upload'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 interface UserModalProps {
   open: boolean
@@ -31,12 +33,15 @@ export function UserModal({ open, onOpenChange, onSuccess }: UserModalProps) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
     password: '',
     papel: 'leitor' as 'admin' | 'operador' | 'leitor',
+    avatar_url: '',
   })
 
   useEffect(() => {
@@ -46,10 +51,30 @@ export function UserModal({ open, onOpenChange, onSuccess }: UserModalProps) {
         email: '',
         password: '',
         papel: 'leitor',
+        avatar_url: '',
       })
+      setPhotoFile(null)
+      setPhotoPreview(null)
       setShowPassword(false)
     }
   }, [open])
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setPhotoFile(file)
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        setPhotoPreview(ev.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleRemovePhoto = () => {
+    setPhotoFile(null)
+    setPhotoPreview(null)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -98,6 +123,17 @@ export function UserModal({ open, onOpenChange, onSuccess }: UserModalProps) {
 
     setLoading(true)
     try {
+      // Upload de avatar comprimido para o bucket 'avatars' (max 400px, 80% qualidade)
+      let uploadedAvatarUrl = ''
+      if (photoFile) {
+        uploadedAvatarUrl = await uploadImageToStorage(photoFile, 'avatars', {
+          maxWidth: 400,
+          maxHeight: 400,
+          quality: 0.8,
+          outputFormat: 'image/jpeg',
+        })
+      }
+
       // 1. Chamar supabase.auth.signUp com metadata
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -109,6 +145,7 @@ export function UserModal({ open, onOpenChange, onSuccess }: UserModalProps) {
             papel: formData.papel,
             role: formData.papel,
             app_role: formData.papel,
+            avatar_url: uploadedAvatarUrl || undefined,
           },
         },
       })
@@ -134,6 +171,7 @@ export function UserModal({ open, onOpenChange, onSuccess }: UserModalProps) {
             email,
             papel: formData.papel,
             role: formData.papel,
+            avatar_url: uploadedAvatarUrl || null,
             bloqueado: false,
           },
           { onConflict: 'id' },
@@ -194,6 +232,53 @@ export function UserModal({ open, onOpenChange, onSuccess }: UserModalProps) {
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
+            {/* Upload de Foto / Avatar */}
+            <div className="flex flex-col sm:flex-row items-center gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <Avatar className="w-16 h-16 border-2 border-emerald-500 shadow-sm">
+                {photoPreview ? (
+                  <AvatarImage src={photoPreview} alt="Preview da foto" className="object-cover" />
+                ) : (
+                  <AvatarFallback className="bg-emerald-100 text-emerald-800 text-base font-bold">
+                    <Camera className="w-6 h-6 text-emerald-600" />
+                  </AvatarFallback>
+                )}
+              </Avatar>
+
+              <div className="space-y-1.5 flex-1 text-center sm:text-left">
+                <Label className="text-xs font-semibold text-slate-800">
+                  Foto de Perfil (Opcional)
+                </Label>
+                <p className="text-[11px] text-slate-500">
+                  Comprimida automaticamente (max 400px, 80% qualidade).
+                </p>
+                <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
+                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-xs">
+                    <Upload className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Selecionar Foto</span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/jpg"
+                      onChange={handlePhotoSelect}
+                      className="hidden"
+                      disabled={loading}
+                    />
+                  </label>
+                  {photoPreview && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRemovePhoto}
+                      className="h-7 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2"
+                    >
+                      <X className="w-3.5 h-3.5 mr-1" />
+                      Remover
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Nome */}
             <div>
               <Label htmlFor="user-name" className="text-xs font-semibold text-slate-700">

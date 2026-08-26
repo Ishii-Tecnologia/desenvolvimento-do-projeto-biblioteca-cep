@@ -17,6 +17,7 @@ import {
   Calendar,
 } from 'lucide-react'
 import { ReserveModal } from '@/components/ReserveModal'
+import { ConfirmModal } from '@/components/ConfirmModal'
 import { useToast } from '@/hooks/use-toast'
 
 export default function Reservas() {
@@ -28,6 +29,13 @@ export default function Reservas() {
   const [statusTab, setStatusTab] = useState<string>('Ativa')
   const [reserveModalOpen, setReserveModalOpen] = useState(false)
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null)
+
+  // Confirm modals state
+  const [fulfillConfirmOpen, setFulfillConfirmOpen] = useState(false)
+  const [reservaToFulfill, setReservaToFulfill] = useState<ReservaDetailed | null>(null)
+
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false)
+  const [reservaToCancel, setReservaToCancel] = useState<ReservaDetailed | null>(null)
 
   const loadReservas = async () => {
     setLoading(true)
@@ -49,15 +57,22 @@ export default function Reservas() {
     loadReservas()
   }, [statusTab])
 
-  const handleFulfill = async (id_reserva: number) => {
-    if (!confirm('Deseja marcar esta reserva como atendida (exemplar entregue/retirado)?')) return
-    setActionLoadingId(id_reserva)
+  const handleFulfill = (res: ReservaDetailed) => {
+    setReservaToFulfill(res)
+    setFulfillConfirmOpen(true)
+  }
+
+  const executeFulfill = async () => {
+    if (!reservaToFulfill) return
+    setActionLoadingId(reservaToFulfill.id_reserva)
     try {
-      await ReservasService.fulfill(id_reserva)
+      await ReservasService.fulfill(reservaToFulfill.id_reserva)
       toast({
         title: 'Reserva atendida',
         description: 'Status atualizado com sucesso.',
       })
+      setFulfillConfirmOpen(false)
+      setReservaToFulfill(null)
       loadReservas()
     } catch (err: any) {
       toast({
@@ -70,15 +85,22 @@ export default function Reservas() {
     }
   }
 
-  const handleCancel = async (id_reserva: number) => {
-    if (!confirm('Deseja cancelar esta solicitação de reserva?')) return
-    setActionLoadingId(id_reserva)
+  const handleCancel = (res: ReservaDetailed) => {
+    setReservaToCancel(res)
+    setCancelConfirmOpen(true)
+  }
+
+  const executeCancel = async () => {
+    if (!reservaToCancel) return
+    setActionLoadingId(reservaToCancel.id_reserva)
     try {
-      await ReservasService.cancel(id_reserva)
+      await ReservasService.cancel(reservaToCancel.id_reserva)
       toast({
         title: 'Reserva cancelada',
         description: 'A solicitação foi encerrada.',
       })
+      setCancelConfirmOpen(false)
+      setReservaToCancel(null)
       loadReservas()
     } catch (err: any) {
       toast({
@@ -231,7 +253,7 @@ export default function Reservas() {
                           size="sm"
                           variant="outline"
                           disabled={isLoadingThis}
-                          onClick={() => handleCancel(res.id_reserva)}
+                          onClick={() => handleCancel(res)}
                           className="h-8 text-xs border-slate-200 text-slate-600 hover:bg-slate-100 gap-1"
                         >
                           <XCircle className="w-3.5 h-3.5" />
@@ -240,7 +262,7 @@ export default function Reservas() {
                         <Button
                           size="sm"
                           disabled={isLoadingThis}
-                          onClick={() => handleFulfill(res.id_reserva)}
+                          onClick={() => handleFulfill(res)}
                           className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium gap-1 shadow-sm"
                         >
                           {isLoadingThis ? (
@@ -265,6 +287,28 @@ export default function Reservas() {
         open={reserveModalOpen}
         onOpenChange={setReserveModalOpen}
         onSuccess={loadReservas}
+      />
+
+      <ConfirmModal
+        open={fulfillConfirmOpen}
+        onOpenChange={setFulfillConfirmOpen}
+        title="Atender Reserva"
+        description={`Deseja marcar a reserva #${reservaToFulfill?.id_reserva} do livro "${reservaToFulfill?.titulo?.titulo_de_livro}" para o leitor ${reservaToFulfill?.leitor?.nome_do_leitor} como atendida?`}
+        confirmLabel="Confirmar Atendimento"
+        variant="primary"
+        loading={actionLoadingId === reservaToFulfill?.id_reserva}
+        onConfirm={executeFulfill}
+      />
+
+      <ConfirmModal
+        open={cancelConfirmOpen}
+        onOpenChange={setCancelConfirmOpen}
+        title="Cancelar Reserva"
+        description={`Deseja realmente cancelar a reserva #${reservaToCancel?.id_reserva} do livro "${reservaToCancel?.titulo?.titulo_de_livro}" para ${reservaToCancel?.leitor?.nome_do_leitor}?`}
+        confirmLabel="Sim, Cancelar Reserva"
+        variant="destructive"
+        loading={actionLoadingId === reservaToCancel?.id_reserva}
+        onConfirm={executeCancel}
       />
     </div>
   )

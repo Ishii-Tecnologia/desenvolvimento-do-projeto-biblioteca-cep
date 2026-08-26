@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { ExemplaresService, Exemplar } from '@/services/exemplares'
 import { Titulo } from '@/services/titulos'
+import { ConfirmModal } from '@/components/ConfirmModal'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import { Layers, Plus, Trash2, MapPin, Loader2, BookOpen } from 'lucide-react'
@@ -39,6 +40,11 @@ export function CopiesModal({
 
   const [newLocation, setNewLocation] = useState('Estante Geral')
   const [newQuantity, setNewQuantity] = useState(1)
+
+  // Confirm delete copy
+  const [deleteCopyConfirmOpen, setDeleteCopyConfirmOpen] = useState(false)
+  const [copyIdToDelete, setCopyIdToDelete] = useState<string | null>(null)
+  const [deleteCopyLoading, setDeleteCopyLoading] = useState(false)
 
   useEffect(() => {
     if (open && titulo) {
@@ -97,18 +103,28 @@ export function CopiesModal({
     }
   }
 
-  const handleDeleteCopy = async (id_exemplar: string) => {
-    if (!confirm(`Deseja realmente remover o exemplar físico ${id_exemplar}?`)) return
+  const handleDeleteCopy = (id_exemplar: string) => {
+    setCopyIdToDelete(id_exemplar)
+    setDeleteCopyConfirmOpen(true)
+  }
+
+  const executeDeleteCopy = async () => {
+    if (!copyIdToDelete) return
+    setDeleteCopyLoading(true)
     try {
-      await ExemplaresService.delete(id_exemplar)
+      await ExemplaresService.delete(copyIdToDelete)
       toast({
         title: 'Exemplar removido',
-        description: `Exemplar ${id_exemplar} excluído com sucesso.`,
+        description: `Exemplar ${copyIdToDelete} excluído com sucesso.`,
       })
+      setDeleteCopyConfirmOpen(false)
+      setCopyIdToDelete(null)
       await loadCopies()
       onCopiesUpdated()
     } catch (err: any) {
       toast({ title: 'Não foi possível remover', description: err.message, variant: 'destructive' })
+    } finally {
+      setDeleteCopyLoading(false)
     }
   }
 
@@ -292,6 +308,17 @@ export function CopiesModal({
           </div>
         </div>
       </DialogContent>
+
+      <ConfirmModal
+        open={deleteCopyConfirmOpen}
+        onOpenChange={setDeleteCopyConfirmOpen}
+        title="Remover Exemplar Físico"
+        description={`Deseja realmente remover o exemplar físico ${copyIdToDelete}? Esta ação excluirá este registro permanente de cópia.`}
+        confirmLabel="Sim, Remover Exemplar"
+        variant="destructive"
+        loading={deleteCopyLoading}
+        onConfirm={executeDeleteCopy}
+      />
     </Dialog>
   )
 }

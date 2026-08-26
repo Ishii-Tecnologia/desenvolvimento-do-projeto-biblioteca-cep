@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { TitulosService, Titulo } from '@/services/titulos'
 import { useToast } from '@/hooks/use-toast'
-import { Sparkles, Loader2, BookPlus, RefreshCw } from 'lucide-react'
+import { Sparkles, Loader2, BookPlus, RefreshCw, Upload, Image as ImageIcon, X } from 'lucide-react'
+import { uploadImageToStorage } from '@/lib/image-upload'
 
 interface BookFormModalProps {
   open: boolean
@@ -25,6 +26,8 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [generatingId, setGeneratingId] = useState(false)
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     id_titulo: '',
@@ -55,6 +58,8 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
         exemplaresIniciais: 0,
         localizacao: '',
       })
+      setCoverPreview(bookToEdit.capa_url || null)
+      setCoverFile(null)
     } else {
       setFormData({
         id_titulo: '',
@@ -69,8 +74,28 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
         exemplaresIniciais: 1,
         localizacao: 'Estante A-1',
       })
+      setCoverPreview(null)
+      setCoverFile(null)
     }
   }, [bookToEdit, open])
+
+  const handleCoverSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setCoverFile(file)
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        setCoverPreview(ev.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleRemoveCover = () => {
+    setCoverFile(null)
+    setCoverPreview(null)
+    setFormData((prev) => ({ ...prev, capa_url: '' }))
+  }
 
   const handleGenerateCode = async () => {
     if (!formData.autor.trim()) {
@@ -105,6 +130,17 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
 
     setLoading(true)
     try {
+      let finalCapaUrl = formData.capa_url.trim() || null
+
+      if (coverFile) {
+        finalCapaUrl = await uploadImageToStorage(coverFile, 'capas', {
+          maxWidth: 800,
+          maxHeight: 1200,
+          quality: 0.8,
+          outputFormat: 'image/jpeg',
+        })
+      }
+
       if (bookToEdit) {
         await TitulosService.update(bookToEdit.id_titulo, {
           titulo_de_livro: formData.titulo_de_livro,
@@ -114,7 +150,7 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
           isbn: formData.isbn || null,
           categoria: formData.categoria || null,
           vol: Number(formData.vol) || 0,
-          capa_url: formData.capa_url || null,
+          capa_url: finalCapaUrl,
         })
         toast({ title: 'Sucesso', description: 'Livro atualizado com sucesso!' })
       } else {
@@ -128,7 +164,7 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
             isbn: formData.isbn || null,
             categoria: formData.categoria || null,
             vol: Number(formData.vol) || 0,
-            capa_url: formData.capa_url || null,
+            capa_url: finalCapaUrl,
           },
           formData.exemplaresIniciais,
           formData.localizacao,
@@ -165,6 +201,59 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
+            {/* Upload de Capa */}
+            <div className="flex flex-col sm:flex-row items-center gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="w-20 h-28 bg-slate-200 rounded border border-slate-300 overflow-hidden flex items-center justify-center shrink-0 shadow-xs">
+                {coverPreview ? (
+                  <img
+                    src={coverPreview}
+                    alt="Capa do livro"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-slate-400 p-2 text-center">
+                    <ImageIcon className="w-6 h-6 mb-1" />
+                    <span className="text-[10px] leading-tight font-medium">Sem capa</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1.5 flex-1 text-center sm:text-left">
+                <Label className="text-xs font-semibold text-slate-800">
+                  Imagem da Capa do Livro
+                </Label>
+                <p className="text-[11px] text-slate-500">
+                  Comprimida via Canvas (max 800px largura, 80% qualidade) e salva no Supabase
+                  Storage.
+                </p>
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-xs">
+                    <Upload className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Upload de Imagem</span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/jpg"
+                      onChange={handleCoverSelect}
+                      className="hidden"
+                      disabled={loading}
+                    />
+                  </label>
+                  {coverPreview && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRemoveCover}
+                      className="h-8 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2"
+                    >
+                      <X className="w-3.5 h-3.5 mr-1" />
+                      Remover Capa
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-2">
                 <Label htmlFor="titulo_de_livro" className="text-xs font-semibold text-slate-700">
@@ -306,13 +395,18 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
 
               <div>
                 <Label htmlFor="capa_url" className="text-xs font-semibold text-slate-700">
-                  URL da Imagem da Capa (opcional)
+                  Ou URL externa da Capa
                 </Label>
                 <Input
                   id="capa_url"
-                  placeholder="https://..."
+                  placeholder="https://exemplo.com/capa.jpg"
                   value={formData.capa_url}
-                  onChange={(e) => setFormData({ ...formData, capa_url: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, capa_url: e.target.value })
+                    if (!coverFile && e.target.value) {
+                      setCoverPreview(e.target.value)
+                    }
+                  }}
                   className="mt-1 text-xs"
                 />
               </div>

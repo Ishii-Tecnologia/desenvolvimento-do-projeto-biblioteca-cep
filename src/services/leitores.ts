@@ -55,6 +55,7 @@ export const LeitoresService = {
         telefone: l.telefone,
         data_cadastro: l.data_cadastro,
         bloqueado: l.bloqueado,
+        foto: l.foto || null,
         created_at: l.created_at,
         emprestimos_ativos: activeLoans.length,
         emprestimos_atrasados: overdueLoans.length,

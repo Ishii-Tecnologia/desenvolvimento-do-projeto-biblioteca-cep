@@ -31,6 +31,7 @@ import { BookFormModal } from '@/components/BookFormModal'
 import { CopiesModal } from '@/components/CopiesModal'
 import { LoanModal } from '@/components/LoanModal'
 import { ReserveModal } from '@/components/ReserveModal'
+import { ConfirmModal } from '@/components/ConfirmModal'
 import { useToast } from '@/hooks/use-toast'
 
 export default function Acervo() {
@@ -59,6 +60,13 @@ export default function Acervo() {
 
   const [reserveModalOpen, setReserveModalOpen] = useState(false)
   const [preSelectedTitulo, setPreSelectedTitulo] = useState<string>('')
+
+  // Delete confirm modal state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [bookToDelete, setBookToDelete] = useState<{ id_titulo: string; title: string } | null>(
+    null,
+  )
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   const loadBooks = async () => {
     setLoading(true)
@@ -105,16 +113,22 @@ export default function Acervo() {
     setCopiesModalOpen(true)
   }
 
-  const handleDeleteBook = async (id_titulo: string, title: string) => {
-    if (!confirm(`Deseja realmente remover o livro "${title}" (${id_titulo}) do acervo?`)) {
-      return
-    }
+  const handleDeleteBook = (id_titulo: string, title: string) => {
+    setBookToDelete({ id_titulo, title })
+    setDeleteConfirmOpen(true)
+  }
+
+  const handleConfirmDeleteBook = async () => {
+    if (!bookToDelete) return
+    setDeleteLoading(true)
     try {
-      await TitulosService.delete(id_titulo)
+      await TitulosService.delete(bookToDelete.id_titulo)
       toast({
         title: 'Livro excluído',
-        description: `O título ${id_titulo} foi removido com sucesso.`,
+        description: `O título ${bookToDelete.id_titulo} foi removido com sucesso.`,
       })
+      setDeleteConfirmOpen(false)
+      setBookToDelete(null)
       loadBooks()
     } catch (err: any) {
       toast({
@@ -122,6 +136,8 @@ export default function Acervo() {
         description: err.message || 'Verifique se não há empréstimos vinculados.',
         variant: 'destructive',
       })
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -255,16 +271,27 @@ export default function Acervo() {
                     </Badge>
                   </div>
 
-                  {/* Title & Author */}
-                  <div>
-                    <h2 className="font-bold text-slate-900 text-base leading-snug group-hover:text-emerald-700 transition-colors line-clamp-2">
-                      {book.titulo_de_livro}
-                    </h2>
-                    <p className="text-xs font-semibold text-slate-600 mt-1">{book.autor}</p>
-                    <div className="flex items-center gap-3 text-[11px] text-slate-400 mt-2">
-                      {book.editora && <span>Ed: {book.editora}</span>}
-                      {book.ano_publicacao && <span>Ano: {book.ano_publicacao}</span>}
-                      {book.isbn && <span>ISBN: {book.isbn}</span>}
+                  {/* Book Body: Cover + Title & Author */}
+                  <div className="flex items-start gap-3">
+                    {book.capa_url && (
+                      <div className="w-14 h-20 bg-slate-100 rounded border border-slate-200 overflow-hidden shrink-0 shadow-2xs">
+                        <img
+                          src={book.capa_url}
+                          alt={book.titulo_de_livro}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h2 className="font-bold text-slate-900 text-base leading-snug group-hover:text-emerald-700 transition-colors line-clamp-2">
+                        {book.titulo_de_livro}
+                      </h2>
+                      <p className="text-xs font-semibold text-slate-600 mt-1">{book.autor}</p>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-400 mt-2">
+                        {book.editora && <span>Ed: {book.editora}</span>}
+                        {book.ano_publicacao && <span>Ano: {book.ano_publicacao}</span>}
+                        {book.isbn && <span>ISBN: {book.isbn}</span>}
+                      </div>
                     </div>
                   </div>
 
@@ -411,6 +438,17 @@ export default function Acervo() {
         onOpenChange={setReserveModalOpen}
         preSelectedTituloId={preSelectedTitulo}
         onSuccess={loadBooks}
+      />
+
+      <ConfirmModal
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Remover Livro do Acervo"
+        description={`Deseja realmente remover a obra "${bookToDelete?.title}" (${bookToDelete?.id_titulo}) do acervo? Esta ação não pode ser desfeita.`}
+        confirmLabel="Sim, Remover Livro"
+        variant="destructive"
+        loading={deleteLoading}
+        onConfirm={handleConfirmDeleteBook}
       />
     </div>
   )
