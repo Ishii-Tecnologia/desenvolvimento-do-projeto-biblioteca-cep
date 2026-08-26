@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { EmprestimosService } from '@/services/emprestimos'
 import { TitulosService, TituloWithStats } from '@/services/titulos'
+import { getPrazoEmprestimoDias } from '@/services/parametros'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -44,6 +45,7 @@ export default function Index() {
   const [recentBooks, setRecentBooks] = useState<TituloWithStats[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [prazoDias, setPrazoDias] = useState<number>(15)
 
   const [bookModalOpen, setBookModalOpen] = useState(false)
   const [loanModalOpen, setLoanModalOpen] = useState(false)
@@ -52,12 +54,14 @@ export default function Index() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [dashboardStats, books] = await Promise.all([
+      const [dashboardStats, books, prazo] = await Promise.all([
         EmprestimosService.getDashboardMetrics(),
         TitulosService.getAll('', 'all', true),
+        getPrazoEmprestimoDias(),
       ])
       setStats(dashboardStats)
       setRecentBooks(books.slice(0, 8))
+      setPrazoDias(prazo)
     } catch (e) {
       console.error('Error loading dashboard:', e)
     } finally {
@@ -83,7 +87,7 @@ export default function Index() {
           </h1>
           <p className="text-sm sm:text-base text-emerald-100/90 leading-relaxed">
             Plataforma aberta e gratuita para consulta de acervo, registro de empréstimos com
-            devolução em 15 dias, renovações e reservas sem custos adicionais.
+            devolução em {prazoDias} dias, renovações e reservas sem custos adicionais.
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -339,11 +343,11 @@ export default function Index() {
         <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-4 space-y-2">
           <div className="flex items-center gap-2 text-emerald-900 font-bold text-sm">
             <Clock className="w-4 h-4 text-emerald-600" />
-            Prazo de 15 Dias
+            Prazo de {prazoDias} Dias
           </div>
           <p className="text-xs text-emerald-800 leading-relaxed">
-            Empréstimos com prazo padrão de 15 dias corridos. Devolução simples e rápida no balcão
-            de atendimento.
+            Empréstimos com prazo padrão de {prazoDias} dias corridos. Devolução simples e rápida no
+            balcão de atendimento.
           </p>
         </div>
 
@@ -352,8 +356,8 @@ export default function Index() {
             <Repeat className="w-4 h-4 text-teal-600" />1 Renovação Permitida
           </div>
           <p className="text-xs text-teal-800 leading-relaxed">
-            É permitida uma renovação por mais 15 dias caso o livro não possua solicitações ativas
-            na fila de reservas.
+            É permitida uma renovação por mais {prazoDias} dias caso o livro não possua solicitações
+            ativas na fila de reservas.
           </p>
         </div>
 

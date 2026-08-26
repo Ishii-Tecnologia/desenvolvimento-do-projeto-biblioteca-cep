@@ -1,6 +1,7 @@
 import React from 'react'
 import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
+import { getPrazoEmprestimoDias } from '@/services/parametros'
 import {
   BookOpen,
   Users,
@@ -36,7 +37,14 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const { user, profile, isAdmin, isOperadorOrAdmin, signOut } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
+  const [prazoDias, setPrazoDias] = React.useState<number>(15)
   const navigate = useNavigate()
+
+  React.useEffect(() => {
+    getPrazoEmprestimoDias()
+      .then(setPrazoDias)
+      .catch(() => {})
+  }, [])
 
   const handleSignOut = async () => {
     await signOut()
@@ -305,7 +313,7 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex items-center gap-4 text-slate-400">
             <span>Sem taxas ou multas</span>
             <span>•</span>
-            <span>Prazo: 15 dias</span>
+            <span>Prazo: {prazoDias} dias</span>
             <span>•</span>
             <span>Versão 2.0</span>
           </div>

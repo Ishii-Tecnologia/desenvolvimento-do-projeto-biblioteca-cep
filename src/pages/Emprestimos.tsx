@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { EmprestimosService, EmprestimoDetailed } from '@/services/emprestimos'
+import { getPrazoEmprestimoDias } from '@/services/parametros'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -34,6 +35,7 @@ export default function Emprestimos() {
     'ativos',
   )
   const [searchQuery, setSearchQuery] = useState('')
+  const [prazoDias, setPrazoDias] = useState<number>(15)
 
   const [loanModalOpen, setLoanModalOpen] = useState(false)
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null)
@@ -48,8 +50,12 @@ export default function Emprestimos() {
   const loadLoans = async () => {
     setLoading(true)
     try {
-      const data = await EmprestimosService.getAll(statusTab, searchQuery)
+      const [data, prazo] = await Promise.all([
+        EmprestimosService.getAll(statusTab, searchQuery),
+        getPrazoEmprestimoDias(),
+      ])
       setLoans(data)
+      setPrazoDias(prazo)
     } catch (err: any) {
       toast({
         title: 'Erro ao carregar empréstimos',
@@ -151,7 +157,8 @@ export default function Emprestimos() {
             Controle de Empréstimos & Devoluções
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Acompanhamento de prazos de 15 dias, histórico de renovações e registro de devoluções.
+            Acompanhamento de prazos de {prazoDias} dias, histórico de renovações e registro de
+            devoluções.
           </p>
         </div>
 
@@ -347,7 +354,7 @@ export default function Emprestimos() {
                         className="h-8 text-xs border-teal-300 text-teal-800 hover:bg-teal-50 gap-1.5"
                       >
                         <RotateCw className="w-3.5 h-3.5" />
-                        Renovar (+15d)
+                        Renovar (+{prazoDias}d)
                       </Button>
 
                       <Button
@@ -390,8 +397,8 @@ export default function Emprestimos() {
         open={renewConfirmOpen}
         onOpenChange={setRenewConfirmOpen}
         title="Renovar Prazo de Empréstimo"
-        description={`Deseja renovar o empréstimo do exemplar ${loanToRenew?.id_exemplar} ("${loanToRenew?.exemplar?.titulo?.titulo_de_livro}") por mais 15 dias corridos?`}
-        confirmLabel="Sim, Renovar (+15 dias)"
+        description={`Deseja renovar o empréstimo do exemplar ${loanToRenew?.id_exemplar} ("${loanToRenew?.exemplar?.titulo?.titulo_de_livro}") por mais ${prazoDias} dias corridos?`}
+        confirmLabel={`Sim, Renovar (+${prazoDias} dias)`}
         variant="primary"
         loading={actionLoadingId === loanToRenew?.id_emprestimo}
         onConfirm={executeRenew}

@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase/client'
 import type { Tables, TablesInsert, TablesUpdate } from '@/lib/supabase/types'
+import { getPrazoEmprestimoDias, getMaxRenovacoes } from './parametros'
+import { HistoricoService } from './historico'
 
 export type Emprestimo = Tables<'emprestimo'>
 export type EmprestimoInsert = TablesInsert<'emprestimo'>
@@ -204,10 +206,11 @@ export const EmprestimosService = {
       if (rErr || !reader) throw new Error('Leitor não encontrado.')
       if (reader.bloqueado) throw new Error('Leitor bloqueado para novos empréstimos.')
 
-      // 3. Compute dates (15 days)
+      // 3. Compute dates (dynamic days from parameters)
+      const prazoDias = await getPrazoEmprestimoDias()
       const now = new Date()
       const expected = new Date()
-      expected.setDate(now.getDate() + 15)
+      expected.setDate(now.getDate() + prazoDias)
 
       // 4. Create loan
       const { data: newLoan, error: loanErr } = await supabase
@@ -233,13 +236,13 @@ export const EmprestimosService = {
 
       // 6. Log history
       try {
-        await (supabase.from as any)('historico_movimentacao').insert({
-          id_exemplar: id_exemplar,
-          id_leitor: id_leitor,
-          tipo_operacao: 'Empréstimo',
-          usuario_sistema: operatorName,
-          detalhes: `Empréstimo realizado. Devolução prevista: ${expected.toLocaleDateString('pt-BR')}`,
-        })
+        await HistoricoService.log(
+          id_exemplar,
+          'Empréstimo',
+          id_leitor,
+          `Empréstimo realizado. Devolução prevista: ${expected.toLocaleDateString('pt-BR')}`,
+          operatorName,
+        )
       } catch (hErr) {
         console.warn('Log history error:', hErr)
       }
@@ -300,13 +303,13 @@ export const EmprestimosService = {
         .eq('id_exemplar', id_exemplar)
 
       try {
-        await (supabase.from as any)('historico_movimentacao').insert({
-          id_exemplar: id_exemplar,
-          id_leitor: loan.id_leitor,
-          tipo_operacao: 'Devolução',
-          usuario_sistema: operatorName,
-          detalhes: isLate ? `Devolução com ${daysLate} dias de atraso.` : 'Devolução no prazo.',
-        })
+        await HistoricoService.log(
+          id_exemplar,
+          'Devolução',
+          loan.id_leitor,
+          isLate ? `Devolução com ${daysLate} dias de atraso.` : 'Devolução no prazo.',
+          operatorName,
+        )
       } catch (hErr) {
         console.warn('Log history error:', hErr)
       }
@@ -338,12 +341,14 @@ export const EmprestimosService = {
 
       if (lErr || !loan) throw new Error('Empréstimo não encontrado.')
       if (loan.data_devolucao_real) throw new Error('Livro já devolvido.')
-      if (loan.numero_renovacoes >= 1)
-        throw new Error('Limite de renovação atingido (máx: 1 renovação).')
+      const limiteRenovacoes = await getMaxRenovacoes()
+      if (loan.numero_renovacoes >= limiteRenovacoes)
+        throw new Error(`Limite de renovação atingido (máx: ${limiteRenovacoes} renovação(ões)).`)
 
+      const prazoDias = await getPrazoEmprestimoDias()
       const currentExpected = new Date(loan.data_prevista_devolucao)
       const newExpected = new Date(currentExpected)
-      newExpected.setDate(newExpected.getDate() + 15)
+      newExpected.setDate(newExpected.getDate() + prazoDias)
 
       await supabase
         .from('emprestimo')
@@ -356,13 +361,13 @@ export const EmprestimosService = {
         .eq('id_emprestimo', id_emprestimo)
 
       try {
-        await (supabase.from as any)('historico_movimentacao').insert({
-          id_exemplar: loan.id_exemplar,
-          id_leitor: loan.id_leitor,
-          tipo_operacao: 'Renovação',
-          usuario_sistema: operatorName,
-          detalhes: `Renovado até ${newExpected.toLocaleDateString('pt-BR')}`,
-        })
+        await HistoricoService.log(
+          loan.id_exemplar,
+          'Renovação',
+          loan.id_leitor,
+          `Renovado até ${newExpected.toLocaleDateString('pt-BR')}`,
+          operatorName,
+        )
       } catch (hErr) {
         console.warn('Log history error:', hErr)
       }

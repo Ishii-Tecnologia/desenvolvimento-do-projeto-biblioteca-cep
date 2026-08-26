@@ -20,6 +20,7 @@ import {
 import { EmprestimosService } from '@/services/emprestimos'
 import { ExemplaresService, ExemplarWithTitulo } from '@/services/exemplares'
 import { LeitoresService, Leitor } from '@/services/leitores'
+import { getPrazoEmprestimoDias } from '@/services/parametros'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import { Repeat, Loader2, Book, UserCheck, AlertCircle, Calendar } from 'lucide-react'
@@ -52,6 +53,7 @@ export function LoanModal({
   const [selectedLeitor, setSelectedLeitor] = useState<string>('')
   const [searchCopy, setSearchCopy] = useState('')
   const [searchReader, setSearchReader] = useState('')
+  const [prazoDias, setPrazoDias] = useState<number>(15)
 
   useEffect(() => {
     if (open) {
@@ -71,12 +73,14 @@ export function LoanModal({
   const loadData = async () => {
     setLoadingData(true)
     try {
-      const [copies, readers] = await Promise.all([
+      const [copies, readers, prazo] = await Promise.all([
         ExemplaresService.getAll('Disponivel'),
         LeitoresService.getAll('', 'ativos'),
+        getPrazoEmprestimoDias(),
       ])
       setAvailableExemplares(copies as any)
       setActiveReaders(readers)
+      setPrazoDias(prazo)
     } catch (err: any) {
       toast({
         title: 'Erro ao carregar dados',
@@ -110,7 +114,7 @@ export function LoanModal({
   })
 
   const expectedDate = new Date()
-  expectedDate.setDate(expectedDate.getDate() + 15)
+  expectedDate.setDate(expectedDate.getDate() + prazoDias)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -130,7 +134,7 @@ export function LoanModal({
 
       toast({
         title: 'Empréstimo registrado!',
-        description: `Exemplar ${selectedExemplar} emprestado para ${selectedReaderObj?.nome_do_leitor || 'Leitor'}. Devolução em 15 dias.`,
+        description: `Exemplar ${selectedExemplar} emprestado para ${selectedReaderObj?.nome_do_leitor || 'Leitor'}. Devolução em ${prazoDias} dias.`,
       })
 
       onSuccess()
@@ -156,8 +160,8 @@ export function LoanModal({
               Registrar Novo Empréstimo
             </DialogTitle>
             <DialogDescription>
-              Selecione o exemplar físico e o leitor. O prazo padrão é de 15 dias corridos sem
-              custo.
+              Selecione o exemplar físico e o leitor. O prazo padrão é de {prazoDias} dias corridos
+              sem custo.
             </DialogDescription>
           </DialogHeader>
 
@@ -282,15 +286,15 @@ export function LoanModal({
                 <div className="flex items-center justify-between text-emerald-800 font-semibold">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-                    Devolução Prevista (15 dias):
+                    Devolução Prevista ({prazoDias} dias):
                   </span>
                   <span className="bg-emerald-100 px-2 py-0.5 rounded text-emerald-900">
                     {expectedDate.toLocaleDateString('pt-BR')}
                   </span>
                 </div>
                 <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-200/60">
-                  Regra do sistema: Permitida 1 (uma) renovação de 15 dias caso não haja reservas
-                  ativas.
+                  Regra do sistema: Permitida 1 (uma) renovação de {prazoDias} dias caso não haja
+                  reservas ativas.
                 </div>
               </div>
 
