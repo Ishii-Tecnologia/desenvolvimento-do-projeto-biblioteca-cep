@@ -295,6 +295,13 @@ export default function Acervo() {
                     </div>
                   </div>
 
+                  {/* Sinopse */}
+                  {book.sinopse && book.sinopse.trim() !== '' && (
+                    <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed bg-slate-50/50 p-2 rounded border border-slate-100 italic">
+                      {book.sinopse}
+                    </p>
+                  )}
+
                   {/* Stock Status Pill */}
                   <div className="pt-2">
                     <div

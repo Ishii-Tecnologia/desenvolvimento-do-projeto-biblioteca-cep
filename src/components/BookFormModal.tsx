@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { TitulosService, Titulo } from '@/services/titulos'
 import { useToast } from '@/hooks/use-toast'
@@ -37,6 +38,7 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
     ano_publicacao: new Date().getFullYear(),
     isbn: '',
     categoria: 'Geral',
+    sinopse: '',
     vol: 0,
     capa_url: '',
     exemplaresIniciais: 1,
@@ -53,6 +55,7 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
         ano_publicacao: bookToEdit.ano_publicacao || new Date().getFullYear(),
         isbn: bookToEdit.isbn || '',
         categoria: bookToEdit.categoria || 'Geral',
+        sinopse: bookToEdit.sinopse || '',
         vol: bookToEdit.vol || 0,
         capa_url: bookToEdit.capa_url || '',
         exemplaresIniciais: 0,
@@ -69,6 +72,7 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
         ano_publicacao: new Date().getFullYear(),
         isbn: '',
         categoria: 'Literatura Brasileira',
+        sinopse: '',
         vol: 0,
         capa_url: '',
         exemplaresIniciais: 1,
@@ -149,6 +153,7 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
           ano_publicacao: formData.ano_publicacao ? Number(formData.ano_publicacao) : null,
           isbn: formData.isbn || null,
           categoria: formData.categoria || null,
+          sinopse: formData.sinopse?.trim() || null,
           vol: Number(formData.vol) || 0,
           capa_url: finalCapaUrl,
         })
@@ -163,6 +168,7 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
             ano_publicacao: formData.ano_publicacao ? Number(formData.ano_publicacao) : null,
             isbn: formData.isbn || null,
             categoria: formData.categoria || null,
+            sinopse: formData.sinopse?.trim() || null,
             vol: Number(formData.vol) || 0,
             capa_url: finalCapaUrl,
           },
@@ -389,6 +395,20 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
                 value={formData.isbn}
                 onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
                 className="mt-1 font-mono text-xs"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="sinopse" className="text-xs font-semibold text-slate-700">
+                Sinopse
+              </Label>
+              <Textarea
+                id="sinopse"
+                rows={3}
+                placeholder="Resumo ou descrição do enredo da obra..."
+                value={formData.sinopse}
+                onChange={(e) => setFormData({ ...formData, sinopse: e.target.value })}
+                className="mt-1 resize-none text-xs"
               />
             </div>
 

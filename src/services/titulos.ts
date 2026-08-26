@@ -54,6 +54,7 @@ export const TitulosService = {
         ano_publicacao: item.ano_publicacao,
         isbn: item.isbn,
         categoria: item.categoria,
+        sinopse: item.sinopse || null,
         vol: item.vol || 0,
         capa_url: item.capa_url,
         ativo: item.ativo,

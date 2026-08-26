@@ -69,7 +69,7 @@ export default function Reservas() {
       await ReservasService.fulfill(reservaToFulfill.id_reserva)
       toast({
         title: 'Reserva atendida',
-        description: 'Status atualizado com sucesso.',
+        description: 'Empréstimo gerado e registrado no histórico com sucesso.',
       })
       setFulfillConfirmOpen(false)
       setReservaToFulfill(null)
