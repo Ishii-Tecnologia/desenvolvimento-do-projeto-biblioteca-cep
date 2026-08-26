@@ -26,13 +26,77 @@ import {
   Filter,
   CheckCircle2,
   AlertCircle,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import * as TooltipPrimitive from '@radix-ui/react-tooltip'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { BookFormModal } from '@/components/BookFormModal'
 import { CopiesModal } from '@/components/CopiesModal'
 import { LoanModal } from '@/components/LoanModal'
 import { ReserveModal } from '@/components/ReserveModal'
 import { ConfirmModal } from '@/components/ConfirmModal'
 import { useToast } from '@/hooks/use-toast'
+
+interface BookSinopseProps {
+  sinopse: string
+}
+
+function BookSinopse({ sinopse }: BookSinopseProps) {
+  const isMobile = useIsMobile()
+  const [expanded, setExpanded] = useState(false)
+
+  if (isMobile) {
+    return (
+      <div className="space-y-1">
+        <p
+          onClick={() => setExpanded(!expanded)}
+          className={`text-xs text-slate-600 leading-relaxed bg-slate-50/50 p-2 rounded border border-slate-100 italic select-none cursor-pointer transition-colors hover:bg-slate-100/70 ${
+            expanded ? '' : 'line-clamp-3'
+          }`}
+        >
+          {sinopse}
+        </p>
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="text-[11px] font-medium text-[#136b77] hover:underline flex items-center gap-0.5 px-0.5"
+        >
+          {expanded ? (
+            <>
+              Ler menos <ChevronUp className="w-3 h-3" />
+            </>
+          ) : (
+            <>
+              Ler mais <ChevronDown className="w-3 h-3" />
+            </>
+          )}
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed bg-slate-50/50 p-2 rounded border border-slate-100 italic cursor-default">
+            {sinopse}
+          </p>
+        </TooltipTrigger>
+        <TooltipContent
+          side="top"
+          align="center"
+          className="max-w-xs sm:max-w-md bg-[#136b77] text-white border-none p-3 text-xs leading-relaxed shadow-xl rounded-lg font-normal break-words z-50"
+        >
+          {sinopse}
+          <TooltipPrimitive.Arrow className="fill-[#136b77] w-3 h-1.5" />
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
 
 export default function Acervo() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -297,12 +361,7 @@ export default function Acervo() {
 
                   {/* Sinopse */}
                   {book.sinopse && book.sinopse.trim() !== '' && (
-                    <p
-                      title={book.sinopse}
-                      className="text-xs text-slate-600 line-clamp-3 leading-relaxed bg-slate-50/50 p-2 rounded border border-slate-100 italic"
-                    >
-                      {book.sinopse}
-                    </p>
+                    <BookSinopse sinopse={book.sinopse} />
                   )}
 
                   {/* Stock Status Pill */}
