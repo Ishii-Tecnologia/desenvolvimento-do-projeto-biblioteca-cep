@@ -67,18 +67,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .or(`id_auth.eq.${currentUser.id},email.eq.${currentUser.email}`)
         .maybeSingle()
 
+      // Fetch public.profiles to get real-time avatar_url and latest name/papel
+      const { data: profileRow } = await supabase
+        .from('profiles')
+        .select('nome, full_name, role, papel, avatar_url')
+        .eq('id', currentUser.id)
+        .maybeSingle()
+
       const fullName =
+        profileRow?.nome ||
+        profileRow?.full_name ||
         leitorData?.nome_do_leitor ||
         userMeta.full_name ||
         currentUser.email?.split('@')[0] ||
         'Usuário'
 
+      const avatarUrl = profileRow?.avatar_url || userMeta.avatar_url || undefined
+
       setProfile({
         id: currentUser.id,
         email: currentUser.email || '',
         full_name: fullName,
-        role: role,
-        avatar_url: userMeta.avatar_url,
+        role: (profileRow?.papel || profileRow?.role || role) as UserRole,
+        avatar_url: avatarUrl,
         id_leitor: leitorData?.id_leitor,
       })
     } catch (e) {

@@ -30,7 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 interface LayoutProps {
   children?: React.ReactNode
@@ -150,6 +150,13 @@ export default function Layout({ children }: LayoutProps) {
                       className="flex items-center gap-2 p-1.5 h-auto rounded-full hover:bg-slate-100"
                     >
                       <Avatar className="w-8 h-8 border border-slate-200">
+                        {profile?.avatar_url ? (
+                          <AvatarImage
+                            src={profile.avatar_url}
+                            alt={profile.full_name || 'Foto de perfil'}
+                            className="object-cover"
+                          />
+                        ) : null}
                         <AvatarFallback className="bg-emerald-100 text-emerald-800 text-xs font-bold">
                           {getInitials(profile?.full_name)}
                         </AvatarFallback>

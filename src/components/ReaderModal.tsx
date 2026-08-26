@@ -13,8 +13,8 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { LeitoresService, Leitor } from '@/services/leitores'
 import { useToast } from '@/hooks/use-toast'
-import { formatCPF, formatPhone } from '@/lib/utils'
-import { UserPlus, Loader2, Upload, Camera, X } from 'lucide-react'
+import { formatCPF, formatPhone, validateCPF } from '@/lib/utils'
+import { UserPlus, Loader2, Upload, Camera, X, ClipboardPaste } from 'lucide-react'
 import { uploadImageToStorage } from '@/lib/image-upload'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
@@ -31,6 +31,8 @@ export function ReaderModal({ open, onOpenChange, readerToEdit, onSuccess }: Rea
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 
+  const [cpfError, setCpfError] = useState<string | null>(null)
+
   const [formData, setFormData] = useState({
     nome_do_leitor: '',
     email: '',
@@ -41,6 +43,7 @@ export function ReaderModal({ open, onOpenChange, readerToEdit, onSuccess }: Rea
   })
 
   useEffect(() => {
+    setCpfError(null)
     if (readerToEdit) {
       setFormData({
         nome_do_leitor: readerToEdit.nome_do_leitor,
@@ -78,14 +81,51 @@ export function ReaderModal({ open, onOpenChange, readerToEdit, onSuccess }: Rea
     }
   }
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (item.type.startsWith('image/')) {
+        const blob = item.getAsFile()
+        if (blob) {
+          e.preventDefault()
+          const pastedFile = new File([blob], `pasted-image-${Date.now()}.png`, {
+            type: blob.type,
+          })
+          setPhotoFile(pastedFile)
+          const reader = new FileReader()
+          reader.onload = (ev) => {
+            setPhotoPreview(ev.target?.result as string)
+          }
+          reader.readAsDataURL(pastedFile)
+          toast({
+            title: 'Imagem colada!',
+            description: 'Foto do leitor colada com sucesso da área de transferência.',
+          })
+          break
+        }
+      }
+    }
+  }
+
   const handleRemovePhoto = () => {
     setPhotoFile(null)
     setPhotoPreview(null)
     setFormData((prev) => ({ ...prev, foto: '' }))
   }
 
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCPF(e.target.value)
+    setFormData((prev) => ({ ...prev, cpf: formatted }))
+    setCpfError(null)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setCpfError(null)
+
     if (!formData.nome_do_leitor.trim() || !formData.email.trim()) {
       toast({
         title: 'Campos obrigatórios',
@@ -93,6 +133,40 @@ export function ReaderModal({ open, onOpenChange, readerToEdit, onSuccess }: Rea
         variant: 'destructive',
       })
       return
+    }
+
+    const cleanCpf = formData.cpf.replace(/\D/g, '')
+    if (cleanCpf) {
+      // 1. Validação dos dígitos verificadores
+      if (!validateCPF(cleanCpf)) {
+        setCpfError('CPF inválido')
+        toast({
+          title: 'CPF inválido',
+          description:
+            'Por favor, informe um número de CPF válido com dígitos verificadores corretos.',
+          variant: 'destructive',
+        })
+        return
+      }
+
+      // 2. Validação de duplicidade
+      try {
+        const exists = await LeitoresService.checkCpfExists(
+          cleanCpf,
+          readerToEdit ? readerToEdit.id_leitor : undefined,
+        )
+        if (exists) {
+          setCpfError('CPF já cadastrado')
+          toast({
+            title: 'CPF já cadastrado',
+            description: 'Já existe outro leitor cadastrado com este mesmo CPF.',
+            variant: 'destructive',
+          })
+          return
+        }
+      } catch (checkErr: any) {
+        console.error('Erro ao verificar CPF:', checkErr)
+      }
     }
 
     setLoading(true)
@@ -159,7 +233,12 @@ export function ReaderModal({ open, onOpenChange, readerToEdit, onSuccess }: Rea
 
           <div className="grid gap-4 py-4">
             {/* Foto do Leitor */}
-            <div className="flex flex-col sm:flex-row items-center gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div
+              onPaste={handlePaste}
+              tabIndex={0}
+              className="flex flex-col sm:flex-row items-center gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all cursor-default"
+              title="Clique aqui e pressione Ctrl+V / Cmd+V para colar uma imagem da área de transferência"
+            >
               <Avatar className="w-16 h-16 border-2 border-emerald-500 shadow-sm">
                 {photoPreview ? (
                   <AvatarImage src={photoPreview} alt="Preview da foto" className="object-cover" />
@@ -171,11 +250,17 @@ export function ReaderModal({ open, onOpenChange, readerToEdit, onSuccess }: Rea
               </Avatar>
 
               <div className="space-y-1.5 flex-1 text-center sm:text-left">
-                <Label className="text-xs font-semibold text-slate-800">
-                  Foto do Leitor (Opcional)
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold text-slate-800">
+                    Foto do Leitor (Opcional)
+                  </Label>
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-slate-400">
+                    <ClipboardPaste className="w-3 h-3" /> Ctrl+V aceito
+                  </span>
+                </div>
                 <p className="text-[11px] text-slate-500">
-                  Comprimida automaticamente para melhor desempenho no carregamento.
+                  Selecione um arquivo ou cole (Ctrl+V) diretamente aqui. Comprimida
+                  automaticamente.
                 </p>
                 <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
                   <label className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-xs">
@@ -236,16 +321,23 @@ export function ReaderModal({ open, onOpenChange, readerToEdit, onSuccess }: Rea
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="cpf" className="text-xs font-semibold text-slate-700">
-                  CPF
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="cpf" className="text-xs font-semibold text-slate-700">
+                    CPF
+                  </Label>
+                  {cpfError && (
+                    <span className="text-[11px] font-medium text-rose-600">{cpfError}</span>
+                  )}
+                </div>
                 <Input
                   id="cpf"
                   placeholder="000.000.000-00"
                   maxLength={14}
                   value={formData.cpf}
-                  onChange={(e) => setFormData({ ...formData, cpf: formatCPF(e.target.value) })}
-                  className="mt-1 font-mono text-xs"
+                  onChange={handleCpfChange}
+                  className={`mt-1 font-mono text-xs ${
+                    cpfError ? 'border-rose-500 focus-visible:ring-rose-500' : ''
+                  }`}
                 />
               </div>
 

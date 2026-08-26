@@ -13,7 +13,16 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { TitulosService, Titulo } from '@/services/titulos'
 import { useToast } from '@/hooks/use-toast'
-import { Sparkles, Loader2, BookPlus, RefreshCw, Upload, Image as ImageIcon, X } from 'lucide-react'
+import {
+  Sparkles,
+  Loader2,
+  BookPlus,
+  RefreshCw,
+  Upload,
+  Image as ImageIcon,
+  X,
+  ClipboardPaste,
+} from 'lucide-react'
 import { uploadImageToStorage } from '@/lib/image-upload'
 
 interface BookFormModalProps {
@@ -92,6 +101,35 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
         setCoverPreview(ev.target?.result as string)
       }
       reader.readAsDataURL(file)
+    }
+  }
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (item.type.startsWith('image/')) {
+        const blob = item.getAsFile()
+        if (blob) {
+          e.preventDefault()
+          const pastedFile = new File([blob], `pasted-image-${Date.now()}.png`, {
+            type: blob.type,
+          })
+          setCoverFile(pastedFile)
+          const reader = new FileReader()
+          reader.onload = (ev) => {
+            setCoverPreview(ev.target?.result as string)
+          }
+          reader.readAsDataURL(pastedFile)
+          toast({
+            title: 'Imagem colada!',
+            description: 'Capa do livro colada com sucesso da área de transferência.',
+          })
+          break
+        }
+      }
     }
   }
 
@@ -208,7 +246,12 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
 
           <div className="grid gap-4 py-4">
             {/* Upload de Capa */}
-            <div className="flex flex-col sm:flex-row items-center gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div
+              onPaste={handlePaste}
+              tabIndex={0}
+              className="flex flex-col sm:flex-row items-center gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all cursor-default"
+              title="Clique aqui e pressione Ctrl+V / Cmd+V para colar uma imagem da área de transferência"
+            >
               <div className="w-20 h-28 bg-slate-200 rounded border border-slate-300 overflow-hidden flex items-center justify-center shrink-0 shadow-xs">
                 {coverPreview ? (
                   <img
@@ -225,12 +268,17 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
               </div>
 
               <div className="space-y-1.5 flex-1 text-center sm:text-left">
-                <Label className="text-xs font-semibold text-slate-800">
-                  Imagem da Capa do Livro
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold text-slate-800">
+                    Imagem da Capa do Livro
+                  </Label>
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-slate-400">
+                    <ClipboardPaste className="w-3 h-3" /> Ctrl+V aceito
+                  </span>
+                </div>
                 <p className="text-[11px] text-slate-500">
-                  Comprimida via Canvas (max 800px largura, 80% qualidade) e salva no Supabase
-                  Storage.
+                  Selecione um arquivo ou cole (Ctrl+V) diretamente aqui. Comprimida via Canvas e
+                  salva no Storage.
                 </p>
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
                   <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-xs">

@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
-import { UserPlus, Loader2, Eye, EyeOff, Upload, Camera, X } from 'lucide-react'
+import { UserPlus, Loader2, Eye, EyeOff, Upload, Camera, X, ClipboardPaste } from 'lucide-react'
 import { uploadImageToStorage } from '@/lib/image-upload'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
@@ -68,6 +68,35 @@ export function UserModal({ open, onOpenChange, onSuccess }: UserModalProps) {
         setPhotoPreview(ev.target?.result as string)
       }
       reader.readAsDataURL(file)
+    }
+  }
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (item.type.startsWith('image/')) {
+        const blob = item.getAsFile()
+        if (blob) {
+          e.preventDefault()
+          const pastedFile = new File([blob], `pasted-image-${Date.now()}.png`, {
+            type: blob.type,
+          })
+          setPhotoFile(pastedFile)
+          const reader = new FileReader()
+          reader.onload = (ev) => {
+            setPhotoPreview(ev.target?.result as string)
+          }
+          reader.readAsDataURL(pastedFile)
+          toast({
+            title: 'Imagem colada!',
+            description: 'Foto de perfil colada com sucesso da área de transferência.',
+          })
+          break
+        }
+      }
     }
   }
 
@@ -233,7 +262,12 @@ export function UserModal({ open, onOpenChange, onSuccess }: UserModalProps) {
 
           <div className="grid gap-4 py-4">
             {/* Upload de Foto / Avatar */}
-            <div className="flex flex-col sm:flex-row items-center gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div
+              onPaste={handlePaste}
+              tabIndex={0}
+              className="flex flex-col sm:flex-row items-center gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all cursor-default"
+              title="Clique aqui e pressione Ctrl+V / Cmd+V para colar uma imagem da área de transferência"
+            >
               <Avatar className="w-16 h-16 border-2 border-emerald-500 shadow-sm">
                 {photoPreview ? (
                   <AvatarImage src={photoPreview} alt="Preview da foto" className="object-cover" />
@@ -245,11 +279,17 @@ export function UserModal({ open, onOpenChange, onSuccess }: UserModalProps) {
               </Avatar>
 
               <div className="space-y-1.5 flex-1 text-center sm:text-left">
-                <Label className="text-xs font-semibold text-slate-800">
-                  Foto de Perfil (Opcional)
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold text-slate-800">
+                    Foto de Perfil (Opcional)
+                  </Label>
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-slate-400">
+                    <ClipboardPaste className="w-3 h-3" /> Ctrl+V aceito
+                  </span>
+                </div>
                 <p className="text-[11px] text-slate-500">
-                  Comprimida automaticamente (max 400px, 80% qualidade).
+                  Selecione um arquivo ou cole (Ctrl+V) diretamente aqui. Comprimida
+                  automaticamente.
                 </p>
                 <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
                   <label className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 shadow-xs">

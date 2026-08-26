@@ -1,39 +1,16 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
-import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Library, LogIn, UserPlus, Loader2, Shield, User } from 'lucide-react'
+import { Library, LogIn, UserPlus, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
-const SEED_USERS = [
-  {
-    email: 'admin@cep.edu.br',
-    password: 'Skip@Pass',
-    nome: 'Profª Helena Vasconcelos',
-    papel: 'admin' as const,
-  },
-  {
-    email: 'leitor@cep.edu.br',
-    password: 'Skip@Pass',
-    nome: 'Lucas Mendes',
-    papel: 'leitor' as const,
-  },
-]
-
 export default function Login() {
-  const { signIn, signUp, quickLoginAs, user } = useAuth()
+  const { signIn, signUp, user } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -50,94 +27,6 @@ export default function Login() {
   const [regName, setRegName] = useState('')
   const [regEmail, setRegEmail] = useState('')
   const [regPassword, setRegPassword] = useState('')
-
-  // Seeding initial users if not created yet (runs only once via localStorage)
-  useEffect(() => {
-    const seedInitialUsers = async () => {
-      const alreadySeeded = localStorage.getItem('seed-users-v3-created')
-      if (alreadySeeded) return
-
-      try {
-        for (const seedUser of SEED_USERS) {
-          try {
-            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-              email: seedUser.email,
-              password: seedUser.password,
-              options: {
-                data: {
-                  nome: seedUser.nome,
-                  full_name: seedUser.nome,
-                  papel: seedUser.papel,
-                  role: seedUser.papel,
-                  app_role: seedUser.papel,
-                },
-              },
-            })
-
-            if (signUpError) {
-              // If already registered, ignore and continue
-              console.log(`Seed user ${seedUser.email} signUp status:`, signUpError.message)
-            }
-
-            const userId = signUpData?.user?.id
-            if (userId) {
-              // Confirm email via RPC
-              try {
-                await (supabase.rpc as any)('confirm_user_email', { user_id: userId })
-              } catch (rpcErr) {
-                console.warn(`RPC confirm_user_email warning for ${seedUser.email}:`, rpcErr)
-              }
-
-              // Ensure profile entry exists
-              try {
-                await supabase.from('profiles').upsert(
-                  {
-                    id: userId,
-                    nome: seedUser.nome,
-                    full_name: seedUser.nome,
-                    email: seedUser.email,
-                    papel: seedUser.papel,
-                    role: seedUser.papel,
-                    bloqueado: false,
-                  },
-                  { onConflict: 'id' },
-                )
-              } catch (profileErr) {
-                console.warn(`Profiles upsert warning for ${seedUser.email}:`, profileErr)
-              }
-
-              // If leitor, ensure leitor entry exists
-              if (seedUser.papel === 'leitor') {
-                try {
-                  await supabase.from('leitor').upsert(
-                    {
-                      id_auth: userId,
-                      nome_do_leitor: seedUser.nome,
-                      email: seedUser.email,
-                      cpf: '',
-                      data_cadastro: new Date().toISOString().split('T')[0],
-                      bloqueado: false,
-                    },
-                    { onConflict: 'id_auth' },
-                  )
-                } catch (leitorErr) {
-                  console.warn(`Leitor upsert warning for ${seedUser.email}:`, leitorErr)
-                }
-              }
-            }
-          } catch (itemErr) {
-            console.warn(`Error seeding user ${seedUser.email}:`, itemErr)
-          }
-        }
-
-        localStorage.setItem('seed-users-v3-created', 'true')
-      } catch (err) {
-        console.warn('Error in seed users routine:', err)
-      }
-    }
-
-    seedInitialUsers()
-  }, [])
 
   // If already logged in, redirect
   React.useEffect(() => {
@@ -167,28 +56,6 @@ export default function Login() {
         })
       } else {
         toast({ title: 'Bem-vindo!', description: 'Login realizado com sucesso.' })
-        navigate(from, { replace: true })
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleQuickLogin = async (role: 'admin' | 'leitor') => {
-    setLoading(true)
-    try {
-      const { error } = await quickLoginAs(role)
-      if (error) {
-        toast({
-          title: 'Falha no acesso rápido',
-          description: error.message || 'Não foi possível entrar com esta conta.',
-          variant: 'destructive',
-        })
-      } else {
-        toast({
-          title: 'Bem-vindo!',
-          description: `Acesso rápido como ${role === 'admin' ? 'Administrador' : 'Leitor'} realizado com sucesso.`,
-        })
         navigate(from, { replace: true })
       }
     } finally {
@@ -288,7 +155,7 @@ export default function Login() {
                   </div>
                 </CardContent>
 
-                <CardFooter className="pt-2">
+                <CardFooter className="pt-2 pb-6">
                   <Button
                     type="submit"
                     className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs h-9 gap-1.5"
@@ -302,50 +169,6 @@ export default function Login() {
                     Entrar no Sistema
                   </Button>
                 </CardFooter>
-
-                {/* Quick login shortcut section */}
-                <div className="px-6 pb-6 pt-1 space-y-3">
-                  <div className="relative flex items-center justify-center">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-slate-200" />
-                    </div>
-                    <span className="relative bg-white px-2 text-[11px] font-medium text-slate-400">
-                      ou acesse rapidamente
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => handleQuickLogin('admin')}
-                      disabled={loading}
-                      className="bg-slate-700 hover:bg-slate-800 text-white border-slate-700 hover:text-white text-xs h-9 gap-1.5 shadow-sm transition-colors"
-                    >
-                      {loading ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Shield className="w-3.5 h-3.5 text-amber-400" />
-                      )}
-                      <span>Acesso Admin</span>
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => handleQuickLogin('leitor')}
-                      disabled={loading}
-                      className="bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200 text-xs h-9 gap-1.5 shadow-sm transition-colors"
-                    >
-                      {loading ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <User className="w-3.5 h-3.5 text-slate-600" />
-                      )}
-                      <span>Acesso Leitor</span>
-                    </Button>
-                  </div>
-                </div>
               </form>
             </TabsContent>
 
