@@ -21,21 +21,6 @@ export interface HistoricoDetailed {
   }
 }
 
-// Helper to convert string to a valid deterministic UUID format if needed
-function stringToUuid(str: string): string {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-  if (uuidRegex.test(str)) {
-    return str
-  }
-  // Generate a valid RFC4122 v4-ish or standard UUID from arbitrary string
-  const clean = str
-    .replace(/[^a-zA-Z0-9]/g, '')
-    .toLowerCase()
-    .padEnd(32, '0')
-    .slice(0, 32)
-  return `${clean.slice(0, 8)}-${clean.slice(8, 12)}-4${clean.slice(13, 16)}-a${clean.slice(17, 20)}-${clean.slice(20, 32)}`
-}
-
 export const HistoricoService = {
   async getAll(limit = 100, operationFilter?: string): Promise<HistoricoDetailed[]> {
     let query = supabase
@@ -58,14 +43,11 @@ export const HistoricoService = {
     // tipo -> tipo_operacao
     // created_at -> data_hora
     // descricao -> detalhes
-    // entidade_id -> id_exemplar (if entidade_tipo = 'exemplar' or fallback)
+    // entidade_id -> id_exemplar
     // id -> id_log
     const mapped: HistoricoDetailed[] = (data || []).map((item) => ({
       id_log: item.id,
-      id_exemplar:
-        item.entidade_tipo === 'exemplar'
-          ? String(item.entidade_id)
-          : String(item.entidade_id || '-'),
+      id_exemplar: item.entidade_id ? String(item.entidade_id) : '-',
       tipo_operacao: item.tipo,
       data_hora: item.created_at,
       id_leitor: null,
@@ -84,13 +66,11 @@ export const HistoricoService = {
     usuario_sistema = 'Sistema',
     usuario_id?: string,
   ) {
-    const entidadeId = stringToUuid(id_exemplar || '00000000-0000-0000-0000-000000000000')
-
     const insertPayload: any = {
       tipo: tipo_operacao,
       descricao: detalhes || `${tipo_operacao} realizado`,
       entidade_tipo: 'exemplar',
-      entidade_id: entidadeId,
+      entidade_id: id_exemplar || '',
     }
 
     if (usuario_id) {
