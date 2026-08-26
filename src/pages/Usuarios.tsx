@@ -14,9 +14,11 @@ import {
   AlertCircle,
   UserPlus,
   Trash2,
+  Edit3,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserModal } from '@/components/UserModal'
+import { EditUserModal } from '@/components/EditUserModal'
 import { ConfirmModal } from '@/components/ConfirmModal'
 import { AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
@@ -63,6 +65,8 @@ export default function Usuarios() {
   const [searchTerm, setSearchTerm] = useState('')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [userModalOpen, setUserModalOpen] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [userToEdit, setUserToEdit] = useState<ProfileRecord | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<ProfileRecord | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
@@ -106,6 +110,11 @@ export default function Usuarios() {
   const isSelf = (profile: ProfileRecord) => {
     if (!user) return false
     return profile.id === user.id || profile.email.toLowerCase() === user.email?.toLowerCase()
+  }
+
+  const handleEditUser = (profile: ProfileRecord) => {
+    setUserToEdit(profile)
+    setEditModalOpen(true)
   }
 
   const handleUpdateRole = async (
@@ -508,6 +517,17 @@ export default function Usuarios() {
                               </DropdownMenuLabel>
                               <DropdownMenuSeparator />
 
+                              {/* Editar Informações */}
+                              <DropdownMenuItem
+                                onClick={() => handleEditUser(p)}
+                                className="text-xs cursor-pointer text-slate-700 hover:text-slate-900 focus:bg-slate-100"
+                              >
+                                <Edit3 className="w-3.5 h-3.5 mr-2 text-emerald-600" />
+                                Editar Informações
+                              </DropdownMenuItem>
+
+                              <DropdownMenuSeparator />
+
                               {/* Alterar Papel */}
                               <div className="px-2 py-1.5 text-xs font-semibold text-slate-700 flex items-center gap-1.5">
                                 <UserCog className="w-3.5 h-3.5 text-slate-500" />
@@ -595,6 +615,18 @@ export default function Usuarios() {
 
       {/* Modal de Criação de Usuário */}
       <UserModal open={userModalOpen} onOpenChange={setUserModalOpen} onSuccess={fetchProfiles} />
+
+      {/* Modal de Edição de Usuário */}
+      <EditUserModal
+        open={editModalOpen}
+        onOpenChange={(open) => {
+          setEditModalOpen(open)
+          if (!open) setUserToEdit(null)
+        }}
+        user={userToEdit}
+        isCurrentUser={userToEdit ? isSelf(userToEdit) : false}
+        onSuccess={fetchProfiles}
+      />
 
       {/* Modal de Confirmação de Exclusão */}
       <ConfirmModal
