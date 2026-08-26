@@ -550,7 +550,7 @@ export default function Configuracoes() {
                   size="sm"
                   onClick={handleRunOverdueCheck}
                   disabled={runningRoutine || !isAdmin}
-                  className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium shrink-0"
+                  className="bg-gray-500 hover:bg-gray-600 text-white text-xs font-medium shrink-0"
                 >
                   {runningRoutine ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
