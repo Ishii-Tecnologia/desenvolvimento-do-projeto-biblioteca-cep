@@ -175,7 +175,7 @@ export default function Emprestimos() {
         >
           <TabsList className="grid grid-cols-4 w-full md:w-auto bg-slate-100 p-1">
             <TabsTrigger value="ativos" className="text-xs font-semibold">
-              Ativos Em Andamento
+              Emprestados
             </TabsTrigger>
             <TabsTrigger
               value="atrasados"
@@ -253,7 +253,7 @@ export default function Emprestimos() {
                         {loan.id_exemplar}
                       </span>
                       {isReturned ? (
-                        <Badge className="bg-slate-100 text-slate-700 border-slate-300 gap-1 text-[11px]">
+                        <Badge className="bg-slate-100 hover:bg-slate-100 text-slate-700 border-slate-300 gap-1 text-[11px] shadow-none">
                           <CheckCircle2 className="w-3 h-3 text-slate-500" />
                           Devolvido em {formatDate(loan.data_devolucao_real)}
                         </Badge>
@@ -265,7 +265,7 @@ export default function Emprestimos() {
                       ) : (
                         <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 gap-1 text-[11px]">
                           <Clock className="w-3 h-3 text-emerald-600" />
-                          Em Andamento
+                          Emprestado
                         </Badge>
                       )}
 
@@ -336,7 +336,13 @@ export default function Emprestimos() {
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={isLoadingThis || loan.numero_renovacoes >= 1}
+                        disabled={
+                          isLoadingThis ||
+                          !!loan.data_devolucao_real ||
+                          loan.numero_renovacoes >= 1 ||
+                          (loan.dias_atraso ?? 0) > 0 ||
+                          !!loan.atraso
+                        }
                         onClick={() => handleRenew(loan)}
                         className="h-8 text-xs border-teal-300 text-teal-800 hover:bg-teal-50 gap-1.5"
                       >

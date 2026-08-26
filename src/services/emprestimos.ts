@@ -375,8 +375,8 @@ export const EmprestimosService = {
     }
 
     const res = typeof data === 'string' ? JSON.parse(data) : data
-    if (res && res.sucesso === false) {
-      throw new Error(res.mensagem || res.error || 'Erro ao renovar empréstimo.')
+    if (res && (res.sucesso === false || res.success === false)) {
+      throw new Error(res.mensagem || res.message || res.error || 'Erro ao renovar empréstimo.')
     }
     return res
   },

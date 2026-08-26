@@ -379,37 +379,17 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="isbn" className="text-xs font-semibold text-slate-700">
-                  ISBN (opcional)
-                </Label>
-                <Input
-                  id="isbn"
-                  placeholder="Ex: 978-85-359-0277-8"
-                  value={formData.isbn}
-                  onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
-                  className="mt-1 font-mono text-xs"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="capa_url" className="text-xs font-semibold text-slate-700">
-                  Ou URL externa da Capa
-                </Label>
-                <Input
-                  id="capa_url"
-                  placeholder="https://exemplo.com/capa.jpg"
-                  value={formData.capa_url}
-                  onChange={(e) => {
-                    setFormData({ ...formData, capa_url: e.target.value })
-                    if (!coverFile && e.target.value) {
-                      setCoverPreview(e.target.value)
-                    }
-                  }}
-                  className="mt-1 text-xs"
-                />
-              </div>
+            <div>
+              <Label htmlFor="isbn" className="text-xs font-semibold text-slate-700">
+                ISBN (opcional)
+              </Label>
+              <Input
+                id="isbn"
+                placeholder="Ex: 978-85-359-0277-8"
+                value={formData.isbn}
+                onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
+                className="mt-1 font-mono text-xs"
+              />
             </div>
 
             {!bookToEdit && (
