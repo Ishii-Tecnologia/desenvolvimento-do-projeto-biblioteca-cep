@@ -15,13 +15,11 @@ import {
   UserPlus,
   Trash2,
   Edit3,
-  KeyRound,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserModal } from '@/components/UserModal'
 import { EditUserModal } from '@/components/EditUserModal'
 import { ConfirmModal } from '@/components/ConfirmModal'
-import { AdminResetPasswordModal } from '@/components/AdminResetPasswordModal'
 import { AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -73,8 +71,6 @@ export default function Usuarios() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<ProfileRecord | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
-  const [resetPasswordOpen, setResetPasswordOpen] = useState(false)
-  const [userToResetPassword, setUserToResetPassword] = useState<ProfileRecord | null>(null)
 
   const fetchProfiles = async () => {
     setLoading(true)
@@ -120,11 +116,6 @@ export default function Usuarios() {
   const handleEditUser = (profile: ProfileRecord) => {
     setUserToEdit(profile)
     setEditModalOpen(true)
-  }
-
-  const handleOpenResetPassword = (profile: ProfileRecord) => {
-    setUserToResetPassword(profile)
-    setResetPasswordOpen(true)
   }
 
   const handleUpdateRole = async (
@@ -482,19 +473,13 @@ export default function Usuarios() {
                         {/* Status (Bloqueado/Ativo) */}
                         <TableCell className="text-center">
                           {p.bloqueado ? (
-                            <Badge
-                              variant="destructive"
-                              className="bg-rose-100 text-rose-700 hover:bg-rose-200 border-rose-200 text-xs font-medium"
-                            >
+                            <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-100 px-2.5 py-0.5 text-xs font-medium text-rose-700 select-none">
                               Bloqueado
-                            </Badge>
+                            </span>
                           ) : (
-                            <Badge
-                              variant="secondary"
-                              className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-emerald-200 text-xs font-medium"
-                            >
+                            <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 select-none">
                               Ativo
-                            </Badge>
+                            </span>
                           )}
                         </TableCell>
 
@@ -534,15 +519,6 @@ export default function Usuarios() {
                               >
                                 <Edit3 className="w-3.5 h-3.5 mr-2 text-emerald-600" />
                                 Editar Informações
-                              </DropdownMenuItem>
-
-                              {/* Alterar Senha */}
-                              <DropdownMenuItem
-                                onClick={() => handleOpenResetPassword(p)}
-                                className="text-xs cursor-pointer text-slate-700 hover:text-slate-900 focus:bg-slate-100"
-                              >
-                                <KeyRound className="w-3.5 h-3.5 mr-2 text-amber-600" />
-                                Alterar Senha
                               </DropdownMenuItem>
 
                               <DropdownMenuSeparator />
@@ -652,22 +628,24 @@ export default function Usuarios() {
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
         title="Excluir Usuário"
-        description={`Tem certeza que deseja excluir o usuário "${userToDelete?.nome || userToDelete?.full_name || userToDelete?.email}"? Esta ação removerá o acesso permanentemente e não pode ser desfeita.`}
+        description={
+          userToDelete ? (
+            <span>
+              Tem certeza que deseja excluir o usuário{' '}
+              <strong className="text-rose-600 font-bold">
+                {userToDelete.nome || userToDelete.full_name || userToDelete.email}
+              </strong>
+              ? Esta ação removerá o acesso permanentemente e não pode ser desfeita.
+            </span>
+          ) : (
+            'Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.'
+          )
+        }
         confirmLabel="Sim, Excluir Usuário"
         cancelLabel="Cancelar"
         variant="destructive"
         loading={deleteLoading}
         onConfirm={executeDeleteUser}
-      />
-
-      {/* Modal de Alteração de Senha por Administrador */}
-      <AdminResetPasswordModal
-        open={resetPasswordOpen}
-        onOpenChange={(open) => {
-          setResetPasswordOpen(open)
-          if (!open) setUserToResetPassword(null)
-        }}
-        user={userToResetPassword}
       />
     </div>
   )

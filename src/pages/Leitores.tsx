@@ -269,14 +269,14 @@ export default function Leitores() {
                   </div>
 
                   {reader.bloqueado ? (
-                    <Badge className="bg-rose-100 text-rose-800 border-rose-200 text-[10px] gap-1 shrink-0">
+                    <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-100 px-2.5 py-0.5 text-[10px] font-medium text-rose-800 gap-1 shrink-0 select-none">
                       <Lock className="w-3 h-3 text-rose-600" />
                       Bloqueado
-                    </Badge>
+                    </span>
                   ) : (
-                    <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] shrink-0">
+                    <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-medium text-emerald-700 shrink-0 select-none">
                       Ativo
-                    </Badge>
+                    </span>
                   )}
                 </div>
 
@@ -401,7 +401,17 @@ export default function Leitores() {
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
         title="Excluir Cadastro do Leitor"
-        description={`Deseja realmente remover o leitor ${readerToDelete?.nome_do_leitor}? Essa ação não poderá ser desfeita.`}
+        description={
+          readerToDelete ? (
+            <span>
+              Tem certeza que deseja excluir o leitor{' '}
+              <strong className="text-rose-600 font-bold">{readerToDelete.nome_do_leitor}</strong>?
+              Esta ação removerá o cadastro permanentemente e não pode ser desfeita.
+            </span>
+          ) : (
+            'Tem certeza que deseja excluir o leitor? Esta ação não pode ser desfeita.'
+          )
+        }
         confirmLabel="Sim, Excluir Cadastro"
         variant="destructive"
         loading={deleteLoading}

@@ -191,21 +191,21 @@ export default function Reservas() {
                         Reserva #{res.id_reserva}
                       </span>
                       {res.status_reserva === 'Ativa' && (
-                        <Badge className="bg-amber-100 text-amber-800 border-amber-300 text-[11px] gap-1">
+                        <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 gap-1 select-none pointer-events-none">
                           <Clock className="w-3 h-3 text-amber-600" />
                           Aguardando Disponibilidade
-                        </Badge>
+                        </span>
                       )}
                       {res.status_reserva === 'Atendida' && (
-                        <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 text-[11px] gap-1">
+                        <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800 gap-1 select-none pointer-events-none">
                           <Check className="w-3 h-3 text-emerald-600" />
                           Atendida em {formatDate(res.data_atendimento)}
-                        </Badge>
+                        </span>
                       )}
                       {res.status_reserva === 'Cancelada' && (
-                        <Badge className="bg-slate-100 text-slate-600 border-slate-300 text-[11px]">
+                        <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-600 select-none pointer-events-none">
                           Cancelada
-                        </Badge>
+                        </span>
                       )}
                     </div>
 

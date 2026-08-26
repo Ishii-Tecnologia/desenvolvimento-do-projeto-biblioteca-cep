@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { TitulosService, Titulo } from '@/services/titulos'
+import { CategoriasService, Categoria } from '@/services/categorias'
 import { useToast } from '@/hooks/use-toast'
 import {
   Sparkles,
@@ -38,6 +39,15 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
   const [generatingId, setGeneratingId] = useState(false)
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
+  const [categoriesList, setCategoriesList] = useState<Categoria[]>([])
+
+  useEffect(() => {
+    if (open) {
+      CategoriasService.getAll()
+        .then((cats) => setCategoriesList(cats))
+        .catch(() => {})
+    }
+  }, [open])
 
   const [formData, setFormData] = useState({
     id_titulo: '',
@@ -394,11 +404,17 @@ export function BookFormModal({ open, onOpenChange, bookToEdit, onSuccess }: Boo
                 </Label>
                 <Input
                   id="categoria"
-                  placeholder="Ex: Ficção, História, Exatas"
+                  list="categorias-datalist"
+                  placeholder="Ex: Doutrina Espírita, Mediunidade"
                   value={formData.categoria}
                   onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
                   className="mt-1"
                 />
+                <datalist id="categorias-datalist">
+                  {categoriesList.map((cat) => (
+                    <option key={cat.id} value={cat.nome} />
+                  ))}
+                </datalist>
               </div>
 
               <div>

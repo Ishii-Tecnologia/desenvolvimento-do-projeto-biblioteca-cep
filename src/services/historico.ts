@@ -22,15 +22,30 @@ export interface HistoricoDetailed {
 }
 
 export const HistoricoService = {
-  async getAll(limit = 100, operationFilter?: string): Promise<HistoricoDetailed[]> {
-    let query = supabase
-      .from('historico')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(limit)
+  async getAll(
+    limit = 200,
+    operationFilter?: string,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<HistoricoDetailed[]> {
+    let query = supabase.from('historico').select('*').order('created_at', { ascending: false })
+
+    if (limit > 0) {
+      query = query.limit(limit)
+    }
 
     if (operationFilter && operationFilter !== 'all') {
       query = query.ilike('tipo', operationFilter)
+    }
+
+    if (startDate && startDate.trim()) {
+      // Começo do dia em UTC/Local
+      query = query.gte('created_at', `${startDate.trim()}T00:00:00`)
+    }
+
+    if (endDate && endDate.trim()) {
+      // Fim do dia em UTC/Local
+      query = query.lte('created_at', `${endDate.trim()}T23:59:59.999Z`)
     }
 
     const { data, error } = await query
@@ -140,6 +155,71 @@ export const HistoricoService = {
     })
 
     return mapped
+  },
+
+  async countWithFilters(
+    operationFilter?: string,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<number> {
+    let query = supabase.from('historico').select('id', { count: 'exact', head: true })
+
+    if (operationFilter && operationFilter !== 'all') {
+      query = query.ilike('tipo', operationFilter)
+    }
+
+    if (startDate && startDate.trim()) {
+      query = query.gte('created_at', `${startDate.trim()}T00:00:00`)
+    }
+
+    if (endDate && endDate.trim()) {
+      query = query.lte('created_at', `${endDate.trim()}T23:59:59.999Z`)
+    }
+
+    const { count, error } = await query
+    if (error) {
+      console.error('Erro ao contar logs:', error)
+      throw error
+    }
+    return count ?? 0
+  },
+
+  async deleteWithFilters(
+    operationFilter?: string,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<number> {
+    // 1. Contar quantos serão afetados
+    const count = await this.countWithFilters(operationFilter, startDate, endDate)
+    if (count === 0) return 0
+
+    // 2. Executar delete
+    let query = supabase.from('historico').delete()
+
+    if (operationFilter && operationFilter !== 'all') {
+      query = query.ilike('tipo', operationFilter)
+    }
+
+    if (startDate && startDate.trim()) {
+      query = query.gte('created_at', `${startDate.trim()}T00:00:00`)
+    }
+
+    if (endDate && endDate.trim()) {
+      query = query.lte('created_at', `${endDate.trim()}T23:59:59.999Z`)
+    }
+
+    // Se nenhum filtro foi passado, garantir que deleta com neq id dummy
+    if ((!operationFilter || operationFilter === 'all') && !startDate && !endDate) {
+      query = query.neq('id', '00000000-0000-0000-0000-000000000000')
+    }
+
+    const { error } = await query
+    if (error) {
+      console.error('Erro ao deletar logs:', error)
+      throw error
+    }
+
+    return count
   },
 
   async log(

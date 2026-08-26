@@ -16,12 +16,20 @@ import {
   Building2,
   ShieldCheck,
   Sparkles,
+  Tag,
+  Plus,
+  Edit2,
+  Trash2,
+  Check,
+  X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { ConfirmModal } from '@/components/ConfirmModal'
+import { CategoriasService, Categoria } from '@/services/categorias'
 
 interface SystemParam {
   id?: string
@@ -103,6 +111,18 @@ export default function Configuracoes() {
   const [saving, setSaving] = useState(false)
   const [runningRoutine, setRunningRoutine] = useState(false)
 
+  // Categories CRUD state
+  const [categories, setCategories] = useState<Categoria[]>([])
+  const [loadingCategories, setLoadingCategories] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [addingCategory, setAddingCategory] = useState(false)
+  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null)
+  const [editingCategoryName, setEditingCategoryName] = useState('')
+  const [savingCategoryEdit, setSavingCategoryEdit] = useState(false)
+  const [deleteCategoryModalOpen, setDeleteCategoryModalOpen] = useState(false)
+  const [categoryToDelete, setCategoryToDelete] = useState<Categoria | null>(null)
+  const [deletingCategory, setDeletingCategory] = useState(false)
+
   // State values for parameters
   const [prazoEmprestimoDias, setPrazoEmprestimoDias] = useState(
     DEFAULT_PARAMS.prazo_emprestimo_dias.defaultValue,
@@ -170,9 +190,115 @@ export default function Configuracoes() {
     }
   }
 
+  const loadCategories = async () => {
+    setLoadingCategories(true)
+    try {
+      const data = await CategoriasService.getAll()
+      setCategories(data)
+    } catch (err: any) {
+      console.error('Erro ao buscar categorias:', err)
+    } finally {
+      setLoadingCategories(false)
+    }
+  }
+
   useEffect(() => {
     loadParams()
+    loadCategories()
   }, [])
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newCategoryName.trim()) return
+
+    setAddingCategory(true)
+    try {
+      await CategoriasService.create(newCategoryName)
+      toast({
+        title: 'Categoria criada',
+        description: `A categoria "${newCategoryName.trim()}" foi adicionada com sucesso.`,
+      })
+      setNewCategoryName('')
+      await loadCategories()
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao criar categoria',
+        description: err.message || 'Não foi possível cadastrar a categoria.',
+        variant: 'destructive',
+      })
+    } finally {
+      setAddingCategory(false)
+    }
+  }
+
+  const handleStartEditCategory = (cat: Categoria) => {
+    setEditingCategoryId(cat.id)
+    setEditingCategoryName(cat.nome)
+  }
+
+  const handleCancelEditCategory = () => {
+    setEditingCategoryId(null)
+    setEditingCategoryName('')
+  }
+
+  const handleSaveEditCategory = async (cat: Categoria) => {
+    if (!editingCategoryName.trim()) {
+      toast({
+        title: 'Nome obrigatório',
+        description: 'O nome da categoria não pode ficar vazio.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setSavingCategoryEdit(true)
+    try {
+      await CategoriasService.update(cat.id, cat.nome, editingCategoryName)
+      toast({
+        title: 'Categoria atualizada',
+        description: `A categoria "${cat.nome}" foi alterada para "${editingCategoryName.trim()}". Os títulos vinculados foram atualizados.`,
+      })
+      setEditingCategoryId(null)
+      setEditingCategoryName('')
+      await loadCategories()
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao atualizar categoria',
+        description: err.message || 'Não foi possível atualizar a categoria.',
+        variant: 'destructive',
+      })
+    } finally {
+      setSavingCategoryEdit(false)
+    }
+  }
+
+  const handleOpenDeleteCategory = (cat: Categoria) => {
+    setCategoryToDelete(cat)
+    setDeleteCategoryModalOpen(true)
+  }
+
+  const handleExecuteDeleteCategory = async () => {
+    if (!categoryToDelete) return
+    setDeletingCategory(true)
+    try {
+      await CategoriasService.delete(categoryToDelete.id, categoryToDelete.nome)
+      toast({
+        title: 'Categoria excluída',
+        description: `A categoria "${categoryToDelete.nome}" foi removida. Os títulos associados tiveram a categoria desvinculada (em branco).`,
+      })
+      setDeleteCategoryModalOpen(false)
+      setCategoryToDelete(null)
+      await loadCategories()
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao excluir categoria',
+        description: err.message || 'Não foi possível remover a categoria.',
+        variant: 'destructive',
+      })
+    } finally {
+      setDeletingCategory(false)
+    }
+  }
 
   const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -518,6 +644,176 @@ export default function Configuracoes() {
             </div>
           )}
 
+          {/* Seção CRUD de Categorias */}
+          <Card className="border-slate-200 bg-white shadow-xs">
+            <CardHeader className="pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <Tag className="w-5 h-5 text-emerald-600" />
+                    Categorias & Gêneros Literários
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Gerencie a lista oficial de categorias do acervo. A edição atualiza todos os
+                    livros vinculados em cascata, e a exclusão desvincula a categoria dos livros sem
+                    excluí-los.
+                  </CardDescription>
+                </div>
+                <Badge
+                  variant="outline"
+                  className="w-fit text-xs font-medium text-slate-600 bg-slate-50 border-slate-200"
+                >
+                  {categories.length} {categories.length === 1 ? 'categoria' : 'categorias'}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Formulário de Adicionar Categoria */}
+              {isAdmin && (
+                <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+                  <div className="text-xs font-semibold text-slate-800 mb-2 flex items-center gap-1.5">
+                    <Plus className="w-4 h-4 text-emerald-600" />
+                    Nova Categoria
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Ex: Romance Espírita, Filosofia, Estudo..."
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      disabled={addingCategory}
+                      className="text-xs bg-white flex-1"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          handleAddCategory(e)
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleAddCategory}
+                      disabled={addingCategory || !newCategoryName.trim()}
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium gap-1 shrink-0"
+                    >
+                      {addingCategory ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Plus className="w-3.5 h-3.5" />
+                      )}
+                      Adicionar Categoria
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Lista de Categorias */}
+              {loadingCategories ? (
+                <div className="py-8 text-center flex items-center justify-center gap-2 text-xs text-slate-500">
+                  <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+                  Carregando categorias...
+                </div>
+              ) : categories.length === 0 ? (
+                <div className="py-8 text-center text-xs text-slate-400 border border-dashed rounded-lg">
+                  Nenhuma categoria cadastrada no momento.
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100 border border-slate-200 rounded-lg overflow-hidden bg-white">
+                  {categories.map((cat) => {
+                    const isEditing = editingCategoryId === cat.id
+                    return (
+                      <div
+                        key={cat.id}
+                        className="p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-50/70 transition-colors"
+                      >
+                        {isEditing ? (
+                          <div className="flex items-center gap-2 flex-1">
+                            <Input
+                              type="text"
+                              value={editingCategoryName}
+                              onChange={(e) => setEditingCategoryName(e.target.value)}
+                              disabled={savingCategoryEdit}
+                              className="text-xs h-8 bg-white"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault()
+                                  handleSaveEditCategory(cat)
+                                } else if (e.key === 'Escape') {
+                                  handleCancelEditCategory()
+                                }
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => handleSaveEditCategory(cat)}
+                              disabled={savingCategoryEdit || !editingCategoryName.trim()}
+                              className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-2.5"
+                              title="Salvar alterações"
+                            >
+                              {savingCategoryEdit ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Check className="w-3.5 h-3.5" />
+                              )}
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={handleCancelEditCategory}
+                              disabled={savingCategoryEdit}
+                              className="h-8 text-xs text-slate-500 hover:text-slate-800 px-2"
+                              title="Cancelar edição"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Tag className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className="font-semibold text-xs text-slate-800 truncate">
+                              {cat.nome}
+                            </span>
+                          </div>
+                        )}
+
+                        {!isEditing && isAdmin && (
+                          <div className="flex items-center gap-1 self-end sm:self-center shrink-0">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleStartEditCategory(cat)}
+                              className="h-7 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100 gap-1 px-2"
+                              title="Editar nome da categoria"
+                            >
+                              <Edit2 className="w-3 h-3 text-slate-500" />
+                              Editar
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleOpenDeleteCategory(cat)}
+                              className="h-7 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 gap-1 px-2"
+                              title="Excluir categoria"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              Excluir
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Maintenance & Integrity Routine */}
           <Card className="border-slate-200 bg-white shadow-xs">
             <CardHeader className="pb-4">
@@ -575,6 +871,30 @@ export default function Configuracoes() {
           </Card>
         </form>
       )}
+
+      {/* Modal de Confirmação de Exclusão de Categoria */}
+      <ConfirmModal
+        open={deleteCategoryModalOpen}
+        onOpenChange={setDeleteCategoryModalOpen}
+        title="Excluir Categoria"
+        description={
+          categoryToDelete ? (
+            <span>
+              Tem certeza que deseja excluir a categoria{' '}
+              <strong className="text-rose-600 font-bold">"{categoryToDelete.nome}"</strong>? Os
+              títulos vinculados a ela não serão apagados, mas ficarão com a categoria em
+              branco/desvinculada.
+            </span>
+          ) : (
+            'Tem certeza que deseja excluir esta categoria?'
+          )
+        }
+        confirmLabel="Sim, Excluir Categoria"
+        cancelLabel="Cancelar"
+        variant="destructive"
+        loading={deletingCategory}
+        onConfirm={handleExecuteDeleteCategory}
+      />
     </div>
   )
 }

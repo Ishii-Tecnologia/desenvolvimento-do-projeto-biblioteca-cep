@@ -176,11 +176,19 @@ export const TitulosService = {
   },
 
   async getCategories(): Promise<string[]> {
+    const { data: catData } = await (supabase.from('categorias' as any) as any)
+      .select('nome')
+      .order('nome', { ascending: true })
+    if (catData && catData.length > 0) {
+      return catData.map((c: any) => c.nome)
+    }
+
+    // Fallback: buscar das obras caso categorias esteja vazio
     const { data } = await supabase.from('titulo').select('categoria')
     if (!data) return []
     const categories = new Set<string>()
     data.forEach((item) => {
-      if (item.categoria) categories.add(item.categoria)
+      if (item.categoria && item.categoria.trim()) categories.add(item.categoria.trim())
     })
     return Array.from(categories).sort()
   },
