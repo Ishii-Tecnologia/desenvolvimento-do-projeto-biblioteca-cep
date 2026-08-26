@@ -3,6 +3,24 @@ import type { Tables } from '@/lib/supabase/types'
 
 export type Parametro = Tables<'parametros'>
 
+export async function getPrazoEmprestimoDias(): Promise<number> {
+  const { data } = await supabase
+    .from('parametros')
+    .select('valor')
+    .eq('chave', 'prazo_emprestimo_dias')
+    .maybeSingle()
+  return data ? parseInt(data.valor) : 15
+}
+
+export async function getMaxRenovacoes(): Promise<number> {
+  const { data } = await supabase
+    .from('parametros')
+    .select('valor')
+    .eq('chave', 'max_renovacoes')
+    .maybeSingle()
+  return data ? parseInt(data.valor) : 1
+}
+
 export const ParametrosService = {
   async getAll() {
     const { data, error } = await supabase.from('parametros').select('*')
