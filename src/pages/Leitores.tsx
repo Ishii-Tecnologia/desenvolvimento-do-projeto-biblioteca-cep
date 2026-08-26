@@ -21,6 +21,7 @@ import {
   Phone,
 } from 'lucide-react'
 import { ReaderModal } from '@/components/ReaderModal'
+import { formatCPF } from '@/lib/utils'
 import { ConfirmModal } from '@/components/ConfirmModal'
 import { useToast } from '@/hooks/use-toast'
 
@@ -292,7 +293,9 @@ export default function Leitores() {
                     </div>
                   )}
                   {reader.cpf && (
-                    <div className="text-[11px] text-slate-400 font-mono">CPF: {reader.cpf}</div>
+                    <div className="text-[11px] text-slate-400 font-mono">
+                      CPF: {formatCPF(reader.cpf)}
+                    </div>
                   )}
                 </div>
 

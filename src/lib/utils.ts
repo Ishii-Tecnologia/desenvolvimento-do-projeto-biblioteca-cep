@@ -12,6 +12,28 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Formats a CPF string into Brazilian format:
+ * - Up to 11 digits: XXX.XXX.XXX-XX
+ */
+export function formatCPF(value: string): string {
+  if (!value) return ''
+
+  // Keep only digits and limit to 11 characters
+  const digits = value.replace(/\D/g, '').slice(0, 11)
+
+  if (digits.length <= 3) {
+    return digits
+  }
+  if (digits.length <= 6) {
+    return `${digits.slice(0, 3)}.${digits.slice(3)}`
+  }
+  if (digits.length <= 9) {
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`
+  }
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`
+}
+
+/**
  * Formats a phone string into Brazilian phone format:
  * - Up to 10 digits: (XX) XXXX-XXXX
  * - 11 digits: (XX) XXXXX-XXXX

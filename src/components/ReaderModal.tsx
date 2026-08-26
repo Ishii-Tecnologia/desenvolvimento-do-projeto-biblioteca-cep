@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { LeitoresService, Leitor } from '@/services/leitores'
 import { useToast } from '@/hooks/use-toast'
-import { formatPhone } from '@/lib/utils'
+import { formatCPF, formatPhone } from '@/lib/utils'
 import { UserPlus, Loader2, Upload, Camera, X } from 'lucide-react'
 import { uploadImageToStorage } from '@/lib/image-upload'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -45,7 +45,7 @@ export function ReaderModal({ open, onOpenChange, readerToEdit, onSuccess }: Rea
       setFormData({
         nome_do_leitor: readerToEdit.nome_do_leitor,
         email: readerToEdit.email,
-        cpf: readerToEdit.cpf || '',
+        cpf: formatCPF(readerToEdit.cpf || ''),
         telefone: formatPhone(readerToEdit.telefone || ''),
         foto: readerToEdit.foto || '',
         bloqueado: readerToEdit.bloqueado || false,
@@ -242,8 +242,9 @@ export function ReaderModal({ open, onOpenChange, readerToEdit, onSuccess }: Rea
                 <Input
                   id="cpf"
                   placeholder="000.000.000-00"
+                  maxLength={14}
                   value={formData.cpf}
-                  onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, cpf: formatCPF(e.target.value) })}
                   className="mt-1 font-mono text-xs"
                 />
               </div>
