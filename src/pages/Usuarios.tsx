@@ -54,6 +54,7 @@ export interface ProfileRecord {
   created_at: string
   role?: string | null
   avatar_url?: string | null
+  telefone?: string | null
 }
 
 export default function Usuarios() {

@@ -47,6 +47,7 @@ export function EditUserModal({
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
+    telefone: '',
     papel: 'leitor' as 'admin' | 'operador' | 'leitor',
     avatar_url: '',
   })
@@ -57,10 +58,12 @@ export function EditUserModal({
       const currentName = user.nome || user.full_name || ''
       const currentEmail = user.email || ''
       const currentAvatar = user.avatar_url || ''
+      const currentTelefone = user.telefone || ''
 
       setFormData({
         nome: currentName,
         email: currentEmail,
+        telefone: currentTelefone,
         papel: currentRole,
         avatar_url: currentAvatar,
       })
@@ -161,6 +164,7 @@ export function EditUserModal({
         new_email: email,
         new_role: formData.papel,
         new_avatar_url: finalAvatarUrl,
+        new_telefone: formData.telefone.trim() || null,
       })
 
       if (rpcError) throw rpcError
@@ -263,23 +267,43 @@ export function EditUserModal({
               />
             </div>
 
-            {/* Email */}
+            {/* Email (Desabilitado / Somente Leitura) */}
             <div>
               <Label htmlFor="edit-user-email" className="text-xs font-semibold text-slate-700">
-                Endereço de E-mail *
+                Endereço de E-mail (Somente leitura)
               </Label>
               <Input
                 id="edit-user-email"
                 type="email"
                 required
+                readOnly
+                disabled
                 placeholder="Ex: joao.silva@exemplo.com"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="mt-1 bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200"
+              />
+              <p className="text-[11px] text-slate-500 mt-1">
+                O endereço de e-mail não pode ser alterado diretamente por questões de segurança de
+                autenticação.
+              </p>
+            </div>
+
+            {/* Telefone */}
+            <div>
+              <Label htmlFor="edit-user-phone" className="text-xs font-semibold text-slate-700">
+                Telefone / WhatsApp
+              </Label>
+              <Input
+                id="edit-user-phone"
+                type="tel"
+                placeholder="Ex: (11) 98765-4321"
+                value={formData.telefone}
+                onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
                 className="mt-1"
                 disabled={loading}
               />
               <p className="text-[11px] text-slate-500 mt-1">
-                Ao alterar o e-mail, as credenciais de acesso em auth.users serão atualizadas.
+                Número de contato para avisos de empréstimos, devoluções e reservas.
               </p>
             </div>
 
