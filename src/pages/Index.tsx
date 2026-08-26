@@ -3,7 +3,11 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { EmprestimosService } from '@/services/emprestimos'
 import { TitulosService, TituloWithStats } from '@/services/titulos'
-import { getPrazoEmprestimoDias } from '@/services/parametros'
+import {
+  getPrazoEmprestimoDias,
+  getMaxRenovacoes,
+  getPrazoRenovacaoDias,
+} from '@/services/parametros'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -46,6 +50,8 @@ export default function Index() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [prazoDias, setPrazoDias] = useState<number>(15)
+  const [maxRenovacoes, setMaxRenovacoes] = useState<number>(1)
+  const [prazoRenovacaoDias, setPrazoRenovacaoDias] = useState<number>(15)
 
   const [bookModalOpen, setBookModalOpen] = useState(false)
   const [loanModalOpen, setLoanModalOpen] = useState(false)
@@ -54,14 +60,18 @@ export default function Index() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [dashboardStats, books, prazo] = await Promise.all([
+      const [dashboardStats, books, prazo, maxRenov, prazoRenov] = await Promise.all([
         EmprestimosService.getDashboardMetrics(),
         TitulosService.getAll('', 'all', true),
         getPrazoEmprestimoDias(),
+        getMaxRenovacoes(),
+        getPrazoRenovacaoDias(),
       ])
       setStats(dashboardStats)
       setRecentBooks(books.slice(0, 8))
       setPrazoDias(prazo)
+      setMaxRenovacoes(maxRenov)
+      setPrazoRenovacaoDias(prazoRenov)
     } catch (e) {
       console.error('Error loading dashboard:', e)
     } finally {
@@ -353,11 +363,13 @@ export default function Index() {
 
         <div className="bg-teal-50/70 border border-teal-200/80 rounded-xl p-4 space-y-2">
           <div className="flex items-center gap-2 text-teal-900 font-bold text-sm">
-            <Repeat className="w-4 h-4 text-teal-600" />1 Renovação Permitida
+            <Repeat className="w-4 h-4 text-teal-600" />
+            {maxRenovacoes} {maxRenovacoes === 1 ? 'Renovação Permitida' : 'Renovações Permitidas'}
           </div>
           <p className="text-xs text-teal-800 leading-relaxed">
-            É permitida uma renovação por mais {prazoDias} dias caso o livro não possua solicitações
-            ativas na fila de reservas.
+            {maxRenovacoes === 1
+              ? `É permitida uma renovação por mais ${prazoRenovacaoDias} dias caso o livro não possua solicitações ativas na fila de reservas.`
+              : `São permitidas até ${maxRenovacoes} renovações por mais ${prazoRenovacaoDias} dias cada, caso o livro não possua solicitações ativas na fila de reservas.`}
           </p>
         </div>
 

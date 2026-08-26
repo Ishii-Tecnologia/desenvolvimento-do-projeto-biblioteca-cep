@@ -235,17 +235,13 @@ export const EmprestimosService = {
         .eq('id_exemplar', id_exemplar)
 
       // 6. Log history
-      try {
-        await HistoricoService.log(
-          id_exemplar,
-          'Empréstimo',
-          id_leitor,
-          `Empréstimo realizado. Devolução prevista: ${expected.toLocaleDateString('pt-BR')}`,
-          operatorName,
-        )
-      } catch (hErr) {
-        console.warn('Log history error:', hErr)
-      }
+      await HistoricoService.log(
+        id_exemplar,
+        'Empréstimo',
+        id_leitor,
+        `Empréstimo realizado. Devolução prevista: ${expected.toLocaleDateString('pt-BR')}`,
+        operatorName,
+      )
 
       return {
         sucesso: true,
@@ -302,17 +298,13 @@ export const EmprestimosService = {
         .update({ status: 'Disponivel' })
         .eq('id_exemplar', id_exemplar)
 
-      try {
-        await HistoricoService.log(
-          id_exemplar,
-          'Devolução',
-          loan.id_leitor,
-          isLate ? `Devolução com ${daysLate} dias de atraso.` : 'Devolução no prazo.',
-          operatorName,
-        )
-      } catch (hErr) {
-        console.warn('Log history error:', hErr)
-      }
+      await HistoricoService.log(
+        id_exemplar,
+        'Devolução',
+        loan.id_leitor,
+        isLate ? `Devolução com ${daysLate} dias de atraso.` : 'Devolução no prazo.',
+        operatorName,
+      )
 
       return { sucesso: true, mensagem: 'Devolução registrada com sucesso!' }
     }
@@ -360,17 +352,13 @@ export const EmprestimosService = {
         })
         .eq('id_emprestimo', id_emprestimo)
 
-      try {
-        await HistoricoService.log(
-          loan.id_exemplar,
-          'Renovação',
-          loan.id_leitor,
-          `Renovado até ${newExpected.toLocaleDateString('pt-BR')}`,
-          operatorName,
-        )
-      } catch (hErr) {
-        console.warn('Log history error:', hErr)
-      }
+      await HistoricoService.log(
+        loan.id_exemplar,
+        'Renovação',
+        loan.id_leitor,
+        `Renovado até ${newExpected.toLocaleDateString('pt-BR')}`,
+        operatorName,
+      )
 
       return {
         sucesso: true,

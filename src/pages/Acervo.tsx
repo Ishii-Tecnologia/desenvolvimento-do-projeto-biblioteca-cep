@@ -356,7 +356,7 @@ export default function Acervo() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-8 text-xs border-emerald-300 text-emerald-800 hover:bg-emerald-50 gap-1"
+                          className="h-8 text-xs border-emerald-300 bg-emerald-50/50 text-emerald-800 hover:bg-emerald-50/50 hover:text-emerald-800 gap-1 cursor-default"
                           onClick={() => {
                             toast({
                               title: 'Disponível na Biblioteca',
@@ -371,7 +371,7 @@ export default function Acervo() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 text-xs border-amber-300 bg-amber-50/50 text-amber-800 hover:bg-amber-100/60 font-medium gap-1"
+                        className="h-8 text-xs border-amber-300 bg-amber-50/50 text-amber-800 hover:bg-amber-50/50 hover:text-amber-800 font-medium gap-1"
                         onClick={() => handleDirectReserve(book.id_titulo)}
                       >
                         <BookmarkCheck className="w-3.5 h-3.5 text-amber-700" />
