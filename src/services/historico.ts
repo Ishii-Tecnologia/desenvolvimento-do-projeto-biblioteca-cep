@@ -39,21 +39,105 @@ export const HistoricoService = {
       return []
     }
 
+    const rows = data || []
+
+    // Coletar id_leitores e id_exemplares únicos para busca e enriquecimento
+    const readerIds = Array.from(
+      new Set(
+        rows
+          .map((r: any) => r.id_leitor)
+          .filter((id: any): id is number => typeof id === 'number' && id > 0),
+      ),
+    )
+
+    const exemplarIds = Array.from(
+      new Set(
+        rows
+          .map((r: any) => r.entidade_id)
+          .filter((id: any): id is string => typeof id === 'string' && id.trim().length > 0),
+      ),
+    )
+
+    // Buscar leitores em lote se houver id_leitor
+    const readersMap = new Map<number, { nome_do_leitor: string; email: string }>()
+    if (readerIds.length > 0) {
+      const { data: readersData } = await supabase
+        .from('leitor')
+        .select('id_leitor, nome_do_leitor, email')
+        .in('id_leitor', readerIds)
+
+      if (readersData) {
+        readersData.forEach((r) => {
+          readersMap.set(r.id_leitor, {
+            nome_do_leitor: r.nome_do_leitor,
+            email: r.email,
+          })
+        })
+      }
+    }
+
+    // Buscar exemplares e títulos relacionados
+    const exemplarsMap = new Map<
+      string,
+      {
+        id_exemplar: string
+        titulo?: {
+          titulo_de_livro: string
+          autor: string
+        }
+      }
+    >()
+
+    if (exemplarIds.length > 0) {
+      const { data: exemplarsData } = await supabase
+        .from('exemplar')
+        .select(`
+          id_exemplar,
+          titulo (
+            titulo_de_livro,
+            autor
+          )
+        `)
+        .in('id_exemplar', exemplarIds)
+
+      if (exemplarsData) {
+        exemplarsData.forEach((ex: any) => {
+          exemplarsMap.set(ex.id_exemplar, {
+            id_exemplar: ex.id_exemplar,
+            titulo: ex.titulo
+              ? {
+                  titulo_de_livro: ex.titulo.titulo_de_livro,
+                  autor: ex.titulo.autor,
+                }
+              : undefined,
+          })
+        })
+      }
+    }
+
     // Map columns from public.historico:
     // tipo -> tipo_operacao
     // created_at -> data_hora
     // descricao -> detalhes
     // entidade_id -> id_exemplar
     // id -> id_log
-    const mapped: HistoricoDetailed[] = (data || []).map((item) => ({
-      id_log: item.id,
-      id_exemplar: item.entidade_id ? String(item.entidade_id) : '-',
-      tipo_operacao: item.tipo,
-      data_hora: item.created_at,
-      id_leitor: null,
-      usuario_sistema: null,
-      detalhes: item.descricao,
-    }))
+    const mapped: HistoricoDetailed[] = rows.map((item: any) => {
+      const exemplarId = item.entidade_id ? String(item.entidade_id) : '-'
+      const leitorInfo = item.id_leitor ? readersMap.get(item.id_leitor) : undefined
+      const exemplarInfo = exemplarsMap.get(exemplarId)
+
+      return {
+        id_log: item.id,
+        id_exemplar: exemplarId,
+        tipo_operacao: item.tipo,
+        data_hora: item.created_at,
+        id_leitor: item.id_leitor || null,
+        usuario_sistema: null,
+        detalhes: item.descricao,
+        leitor: leitorInfo,
+        exemplar: exemplarInfo,
+      }
+    })
 
     return mapped
   },
@@ -66,11 +150,26 @@ export const HistoricoService = {
     usuario_sistema = 'Sistema',
     usuario_id?: string,
   ) {
+    let finalDescricao = detalhes
+
+    // Enriquecer a descrição automaticamente caso não tenha sido passada
+    if (!finalDescricao) {
+      if (id_leitor) {
+        finalDescricao = `${tipo_operacao} do exemplar ${id_exemplar} para o leitor #${id_leitor}`
+      } else {
+        finalDescricao = `${tipo_operacao} do exemplar ${id_exemplar}`
+      }
+    }
+
     const insertPayload: any = {
       tipo: tipo_operacao,
-      descricao: detalhes || `${tipo_operacao} realizado`,
+      descricao: finalDescricao,
       entidade_tipo: 'exemplar',
       entidade_id: id_exemplar || '',
+    }
+
+    if (id_leitor) {
+      insertPayload.id_leitor = id_leitor
     }
 
     if (usuario_id) {

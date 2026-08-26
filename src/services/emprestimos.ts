@@ -235,11 +235,12 @@ export const EmprestimosService = {
         .eq('id_exemplar', id_exemplar)
 
       // 6. Log history
+      const readerName = reader.nome_do_leitor || `Leitor #${id_leitor}`
       await HistoricoService.log(
         id_exemplar,
         'Empréstimo',
         id_leitor,
-        `Empréstimo realizado. Devolução prevista: ${expected.toLocaleDateString('pt-BR')}`,
+        `Empréstimo do livro ${id_exemplar} para o leitor ${readerName}. Devolução prevista: ${expected.toLocaleDateString('pt-BR')}`,
         operatorName,
       )
 
@@ -254,10 +255,44 @@ export const EmprestimosService = {
     if (res && res.sucesso === false) {
       throw new Error(res.mensagem || res.error || 'Erro ao realizar empréstimo.')
     }
+
+    // Se o RPC funcionou, buscar nome do leitor e registrar no histórico da tabela public.historico
+    try {
+      const { data: reader } = await supabase
+        .from('leitor')
+        .select('nome_do_leitor')
+        .eq('id_leitor', id_leitor)
+        .single()
+      const readerName = reader?.nome_do_leitor || `Leitor #${id_leitor}`
+      const devDateStr = res.data_prevista_devolucao
+        ? new Date(res.data_prevista_devolucao).toLocaleDateString('pt-BR')
+        : 'data prevista'
+
+      await HistoricoService.log(
+        id_exemplar,
+        'Empréstimo',
+        id_leitor,
+        `Empréstimo do livro ${id_exemplar} para o leitor ${readerName}. Devolução prevista: ${devDateStr}`,
+        operatorName,
+      )
+    } catch (logErr) {
+      console.warn('Erro ao registrar log de empréstimo:', logErr)
+    }
+
     return res
   },
 
   async returnLoan(id_exemplar: string, operatorName = 'Sistema') {
+    // Buscar empréstimo ativo antes da devolução para obter id_leitor e leitor
+    const { data: loanBefore } = await supabase
+      .from('emprestimo')
+      .select('id_emprestimo, id_leitor, data_prevista_devolucao, leitor(nome_do_leitor)')
+      .eq('id_exemplar', id_exemplar)
+      .is('data_devolucao_real', null)
+      .order('data_emprestimo', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
     const { data, error } = await supabase.rpc('devolver_exemplar', {
       p_id_exemplar: id_exemplar,
       p_usuario_sistema: operatorName,
@@ -268,7 +303,7 @@ export const EmprestimosService = {
       // Fallback
       const { data: loan, error: lErr } = await supabase
         .from('emprestimo')
-        .select('*')
+        .select('*, leitor(nome_do_leitor)')
         .eq('id_exemplar', id_exemplar)
         .is('data_devolucao_real', null)
         .order('data_emprestimo', { ascending: false })
@@ -298,11 +333,14 @@ export const EmprestimosService = {
         .update({ status: 'Disponivel' })
         .eq('id_exemplar', id_exemplar)
 
+      const readerName = (loan.leitor as any)?.nome_do_leitor || `Leitor #${loan.id_leitor}`
+      const delayInfo = isLate ? ` (com ${daysLate} dia(s) de atraso)` : ' (no prazo)'
+
       await HistoricoService.log(
         id_exemplar,
         'Devolução',
         loan.id_leitor,
-        isLate ? `Devolução com ${daysLate} dias de atraso.` : 'Devolução no prazo.',
+        `Devolução do livro ${id_exemplar} pelo leitor ${readerName}.${delayInfo}`,
         operatorName,
       )
 
@@ -313,10 +351,39 @@ export const EmprestimosService = {
     if (res && res.sucesso === false) {
       throw new Error(res.mensagem || res.error || 'Erro ao registrar devolução.')
     }
+
+    // Se o RPC funcionou, registrar log no HistoricoService
+    try {
+      const readerName =
+        (loanBefore?.leitor as any)?.nome_do_leitor ||
+        (loanBefore?.id_leitor ? `Leitor #${loanBefore.id_leitor}` : 'Leitor')
+      const daysLate = res.dias_atraso || 0
+      const delayInfo = daysLate > 0 ? ` (com ${daysLate} dia(s) de atraso)` : ' (no prazo)'
+
+      await HistoricoService.log(
+        id_exemplar,
+        'Devolução',
+        loanBefore?.id_leitor,
+        `Devolução do livro ${id_exemplar} pelo leitor ${readerName}.${delayInfo}`,
+        operatorName,
+      )
+    } catch (logErr) {
+      console.warn('Erro ao registrar log de devolução:', logErr)
+    }
+
     return res
   },
 
   async renewLoan(id_emprestimo: number, operatorName = 'Sistema') {
+    // Buscar empréstimo antes de renovar para obter exemplar e leitor
+    const { data: loanBefore } = await supabase
+      .from('emprestimo')
+      .select(
+        'id_emprestimo, id_exemplar, id_leitor, data_prevista_devolucao, leitor(nome_do_leitor)',
+      )
+      .eq('id_emprestimo', id_emprestimo)
+      .single()
+
     const { data, error } = await supabase.rpc('renovar_emprestimo', {
       p_id_emprestimo: id_emprestimo,
       p_usuario_sistema: operatorName,
@@ -327,7 +394,7 @@ export const EmprestimosService = {
       // Fallback
       const { data: loan, error: lErr } = await supabase
         .from('emprestimo')
-        .select('*, exemplar(*)')
+        .select('*, exemplar(*), leitor(nome_do_leitor)')
         .eq('id_emprestimo', id_emprestimo)
         .single()
 
@@ -352,11 +419,13 @@ export const EmprestimosService = {
         })
         .eq('id_emprestimo', id_emprestimo)
 
+      const readerName = (loan.leitor as any)?.nome_do_leitor || `Leitor #${loan.id_leitor}`
+
       await HistoricoService.log(
         loan.id_exemplar,
         'Renovação',
         loan.id_leitor,
-        `Renovado até ${newExpected.toLocaleDateString('pt-BR')}`,
+        `Renovação do livro ${loan.id_exemplar} para o leitor ${readerName} até ${newExpected.toLocaleDateString('pt-BR')}`,
         operatorName,
       )
 
@@ -371,6 +440,28 @@ export const EmprestimosService = {
     if (res && (res.sucesso === false || res.success === false)) {
       throw new Error(res.mensagem || res.message || res.error || 'Erro ao renovar empréstimo.')
     }
+
+    // Se o RPC funcionou, registrar log no HistoricoService
+    try {
+      const readerName =
+        (loanBefore?.leitor as any)?.nome_do_leitor ||
+        (loanBefore?.id_leitor ? `Leitor #${loanBefore.id_leitor}` : 'Leitor')
+      const copyId = loanBefore?.id_exemplar || ''
+      const devDateStr = res.nova_data_prevista
+        ? new Date(res.nova_data_prevista).toLocaleDateString('pt-BR')
+        : 'nova data'
+
+      await HistoricoService.log(
+        copyId,
+        'Renovação',
+        loanBefore?.id_leitor,
+        `Renovação do livro ${copyId} para o leitor ${readerName} até ${devDateStr}`,
+        operatorName,
+      )
+    } catch (logErr) {
+      console.warn('Erro ao registrar log de renovação:', logErr)
+    }
+
     return res
   },
 }

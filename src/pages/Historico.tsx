@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { HistoricoService, HistoricoDetailed } from '@/services/historico'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -28,6 +28,7 @@ import { useToast } from '@/hooks/use-toast'
 export default function Historico() {
   const { isOperadorOrAdmin } = useAuth()
   const { toast } = useToast()
+  const navigate = useNavigate()
 
   const [logs, setLogs] = useState<HistoricoDetailed[]>([])
   const [loading, setLoading] = useState(true)
@@ -58,7 +59,11 @@ export default function Historico() {
       case 'empréstimo':
       case 'emprestimo':
         return (
-          <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs gap-1">
+          <Badge
+            onClick={() => navigate('/emprestimos')}
+            className="bg-blue-100 text-blue-800 border-blue-200 text-xs gap-1 cursor-pointer hover:bg-blue-200 hover:shadow-xs transition-all select-none"
+            title="Ir para Empréstimos"
+          >
             <Repeat className="w-3 h-3" />
             Empréstimo
           </Badge>
@@ -66,7 +71,11 @@ export default function Historico() {
       case 'devolução':
       case 'devolucao':
         return (
-          <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-xs gap-1">
+          <Badge
+            onClick={() => navigate('/emprestimos')}
+            className="bg-emerald-100 text-emerald-800 border-emerald-200 text-xs gap-1 cursor-pointer hover:bg-emerald-200 hover:shadow-xs transition-all select-none"
+            title="Ir para Empréstimos"
+          >
             <CornerDownLeft className="w-3 h-3" />
             Devolução
           </Badge>
@@ -74,7 +83,11 @@ export default function Historico() {
       case 'renovação':
       case 'renovacao':
         return (
-          <Badge className="bg-teal-100 text-teal-800 border-teal-200 text-xs gap-1">
+          <Badge
+            onClick={() => navigate('/emprestimos')}
+            className="bg-teal-100 text-teal-800 border-teal-200 text-xs gap-1 cursor-pointer hover:bg-teal-200 hover:shadow-xs transition-all select-none"
+            title="Ir para Empréstimos"
+          >
             <RotateCw className="w-3 h-3" />
             Renovação
           </Badge>
