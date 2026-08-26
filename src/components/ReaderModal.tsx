@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { LeitoresService, Leitor } from '@/services/leitores'
 import { useToast } from '@/hooks/use-toast'
+import { formatPhone } from '@/lib/utils'
 import { UserPlus, Loader2, Upload, Camera, X } from 'lucide-react'
 import { uploadImageToStorage } from '@/lib/image-upload'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -45,7 +46,7 @@ export function ReaderModal({ open, onOpenChange, readerToEdit, onSuccess }: Rea
         nome_do_leitor: readerToEdit.nome_do_leitor,
         email: readerToEdit.email,
         cpf: readerToEdit.cpf || '',
-        telefone: readerToEdit.telefone || '',
+        telefone: formatPhone(readerToEdit.telefone || ''),
         foto: readerToEdit.foto || '',
         bloqueado: readerToEdit.bloqueado || false,
       })
@@ -253,9 +254,13 @@ export function ReaderModal({ open, onOpenChange, readerToEdit, onSuccess }: Rea
                 </Label>
                 <Input
                   id="telefone"
-                  placeholder="(41) 99999-9999"
+                  type="tel"
+                  placeholder="(XX) XXXXX-XXXX"
+                  maxLength={15}
                   value={formData.telefone}
-                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, telefone: formatPhone(e.target.value) })
+                  }
                   className="mt-1 text-xs"
                 />
               </div>

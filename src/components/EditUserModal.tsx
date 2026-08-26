@@ -23,6 +23,7 @@ import { UserCog, Loader2, Upload, Camera, X } from 'lucide-react'
 import { uploadImageToStorage } from '@/lib/image-upload'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ProfileRecord } from '@/pages/Usuarios'
+import { formatPhone } from '@/lib/utils'
 
 interface EditUserModalProps {
   open: boolean
@@ -58,7 +59,7 @@ export function EditUserModal({
       const currentName = user.nome || user.full_name || ''
       const currentEmail = user.email || ''
       const currentAvatar = user.avatar_url || ''
-      const currentTelefone = user.telefone || ''
+      const currentTelefone = formatPhone(user.telefone || '')
 
       setFormData({
         nome: currentName,
@@ -296,9 +297,12 @@ export function EditUserModal({
               <Input
                 id="edit-user-phone"
                 type="tel"
-                placeholder="Ex: (11) 98765-4321"
+                placeholder="(XX) XXXXX-XXXX"
+                maxLength={15}
                 value={formData.telefone}
-                onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, telefone: formatPhone(e.target.value) })
+                }
                 className="mt-1"
                 disabled={loading}
               />

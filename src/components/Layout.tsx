@@ -51,7 +51,7 @@ export default function Layout({ children }: LayoutProps) {
     { to: '/leitores', label: 'Leitores', icon: Users, authRequired: true, operatorOnly: true },
     {
       to: '/historico',
-      label: 'Histórico & Logs',
+      label: 'Logs',
       icon: History,
       authRequired: true,
       operatorOnly: true,
@@ -199,7 +199,7 @@ export default function Layout({ children }: LayoutProps) {
                         <DropdownMenuItem asChild>
                           <Link to="/historico" className="cursor-pointer">
                             <History className="w-4 h-4 mr-2" />
-                            Histórico & Logs
+                            Logs
                           </Link>
                         </DropdownMenuItem>
                       </>
