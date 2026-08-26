@@ -17,6 +17,8 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserModal } from '@/components/UserModal'
+import { ConfirmModal } from '@/components/ConfirmModal'
+import { AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -61,6 +63,9 @@ export default function Usuarios() {
   const [searchTerm, setSearchTerm] = useState('')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [userModalOpen, setUserModalOpen] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<ProfileRecord | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   const fetchProfiles = async () => {
     setLoading(true)
@@ -189,7 +194,7 @@ export default function Usuarios() {
     }
   }
 
-  const handleDeleteUser = async (profile: ProfileRecord) => {
+  const handleDeleteUser = (profile: ProfileRecord) => {
     if (isSelf(profile)) {
       toast({
         title: 'Ação não permitida',
@@ -199,29 +204,30 @@ export default function Usuarios() {
       return
     }
 
-    const displayName = profile.nome || profile.full_name || profile.email
-    if (
-      !window.confirm(
-        `Tem certeza que deseja excluir o usuário "${displayName}"? Esta ação não pode ser desfeita.`,
-      )
-    ) {
-      return
-    }
+    setUserToDelete(profile)
+    setDeleteConfirmOpen(true)
+  }
 
-    setUpdatingId(profile.id)
+  const executeDeleteUser = async () => {
+    if (!userToDelete) return
+    const displayName = userToDelete.nome || userToDelete.full_name || userToDelete.email
+    setDeleteLoading(true)
+    setUpdatingId(userToDelete.id)
     try {
-      const { data, error } = await (supabase.rpc as any)('delete_user', {
-        target_user_id: profile.id,
+      const { error } = await (supabase.rpc as any)('delete_user', {
+        target_user_id: userToDelete.id,
       })
 
       if (error) throw error
 
-      setProfiles((prev) => prev.filter((p) => p.id !== profile.id))
+      setProfiles((prev) => prev.filter((p) => p.id !== userToDelete.id))
 
       toast({
         title: 'Usuário excluído',
         description: `O usuário ${displayName} foi excluído com sucesso da base de dados e do sistema de autenticação.`,
       })
+      setDeleteConfirmOpen(false)
+      setUserToDelete(null)
     } catch (err: any) {
       toast({
         title: 'Erro ao excluir usuário',
@@ -229,6 +235,7 @@ export default function Usuarios() {
         variant: 'destructive',
       })
     } finally {
+      setDeleteLoading(false)
       setUpdatingId(null)
     }
   }
@@ -421,6 +428,13 @@ export default function Usuarios() {
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <Avatar className="w-8 h-8 border border-slate-200">
+                              {p.avatar_url && (
+                                <AvatarImage
+                                  src={p.avatar_url}
+                                  alt={displayName}
+                                  className="object-cover"
+                                />
+                              )}
                               <AvatarFallback className="bg-emerald-100 text-emerald-800 text-xs font-bold">
                                 {getInitials(p.nome || p.full_name, p.email)}
                               </AvatarFallback>
@@ -581,6 +595,19 @@ export default function Usuarios() {
 
       {/* Modal de Criação de Usuário */}
       <UserModal open={userModalOpen} onOpenChange={setUserModalOpen} onSuccess={fetchProfiles} />
+
+      {/* Modal de Confirmação de Exclusão */}
+      <ConfirmModal
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Excluir Usuário"
+        description={`Tem certeza que deseja excluir o usuário "${userToDelete?.nome || userToDelete?.full_name || userToDelete?.email}"? Esta ação removerá o acesso permanentemente e não pode ser desfeita.`}
+        confirmLabel="Sim, Excluir Usuário"
+        cancelLabel="Cancelar"
+        variant="destructive"
+        loading={deleteLoading}
+        onConfirm={executeDeleteUser}
+      />
     </div>
   )
 }

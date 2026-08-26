@@ -45,7 +45,7 @@ export default function Layout({ children }: LayoutProps) {
 
   const navItems = [
     { to: '/', label: 'Início', icon: LayoutDashboard, authRequired: false },
-    { to: '/acervo', label: 'Acervo de Livros', icon: BookOpen, authRequired: false },
+    { to: '/acervo', label: 'Livros', icon: BookOpen, authRequired: false },
     { to: '/emprestimos', label: 'Empréstimos', icon: Repeat, authRequired: true },
     { to: '/reservas', label: 'Reservas', icon: BookmarkCheck, authRequired: true },
     { to: '/leitores', label: 'Leitores', icon: Users, authRequired: true, operatorOnly: true },
