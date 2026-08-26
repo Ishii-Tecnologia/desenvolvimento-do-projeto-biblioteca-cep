@@ -17,7 +17,9 @@ import {
   Menu,
   X,
   BookMarked,
+  KeyRound,
 } from 'lucide-react'
+import { ChangeOwnPasswordModal } from '@/components/ChangeOwnPasswordModal'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -38,6 +40,7 @@ export default function Layout({ children }: LayoutProps) {
   const { user, profile, isAdmin, isOperadorOrAdmin, signOut } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
   const [prazoDias, setPrazoDias] = React.useState<number>(15)
+  const [changePasswordOpen, setChangePasswordOpen] = React.useState(false)
   const navigate = useNavigate()
 
   React.useEffect(() => {
@@ -230,6 +233,14 @@ export default function Layout({ children }: LayoutProps) {
                     )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
+                      onClick={() => setChangePasswordOpen(true)}
+                      className="cursor-pointer text-slate-700 hover:text-slate-900"
+                    >
+                      <KeyRound className="w-4 h-4 mr-2 text-emerald-600" />
+                      Alterar minha senha
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
                       onClick={handleSignOut}
                       className="text-rose-600 cursor-pointer focus:text-rose-600"
                     >
@@ -301,6 +312,9 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Main Content View */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">{children}</main>
+
+      {/* Modal de Alteração da Própria Senha */}
+      <ChangeOwnPasswordModal open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
 
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-6 mt-auto">

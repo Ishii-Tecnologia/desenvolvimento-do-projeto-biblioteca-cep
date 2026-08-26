@@ -15,11 +15,13 @@ import {
   UserPlus,
   Trash2,
   Edit3,
+  KeyRound,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserModal } from '@/components/UserModal'
 import { EditUserModal } from '@/components/EditUserModal'
 import { ConfirmModal } from '@/components/ConfirmModal'
+import { AdminResetPasswordModal } from '@/components/AdminResetPasswordModal'
 import { AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -71,6 +73,8 @@ export default function Usuarios() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<ProfileRecord | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false)
+  const [userToResetPassword, setUserToResetPassword] = useState<ProfileRecord | null>(null)
 
   const fetchProfiles = async () => {
     setLoading(true)
@@ -116,6 +120,11 @@ export default function Usuarios() {
   const handleEditUser = (profile: ProfileRecord) => {
     setUserToEdit(profile)
     setEditModalOpen(true)
+  }
+
+  const handleOpenResetPassword = (profile: ProfileRecord) => {
+    setUserToResetPassword(profile)
+    setResetPasswordOpen(true)
   }
 
   const handleUpdateRole = async (
@@ -527,6 +536,15 @@ export default function Usuarios() {
                                 Editar Informações
                               </DropdownMenuItem>
 
+                              {/* Alterar Senha */}
+                              <DropdownMenuItem
+                                onClick={() => handleOpenResetPassword(p)}
+                                className="text-xs cursor-pointer text-slate-700 hover:text-slate-900 focus:bg-slate-100"
+                              >
+                                <KeyRound className="w-3.5 h-3.5 mr-2 text-amber-600" />
+                                Alterar Senha
+                              </DropdownMenuItem>
+
                               <DropdownMenuSeparator />
 
                               {/* Alterar Papel */}
@@ -640,6 +658,16 @@ export default function Usuarios() {
         variant="destructive"
         loading={deleteLoading}
         onConfirm={executeDeleteUser}
+      />
+
+      {/* Modal de Alteração de Senha por Administrador */}
+      <AdminResetPasswordModal
+        open={resetPasswordOpen}
+        onOpenChange={(open) => {
+          setResetPasswordOpen(open)
+          if (!open) setUserToResetPassword(null)
+        }}
+        user={userToResetPassword}
       />
     </div>
   )
