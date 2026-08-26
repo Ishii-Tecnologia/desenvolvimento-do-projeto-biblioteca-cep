@@ -99,7 +99,10 @@ export const HistoricoService = {
 
     const { data, error } = await supabase.from('historico').insert(insertPayload).select().single()
 
-    if (error) console.error('Erro ao registrar log de historico:', error)
+    if (error) {
+      console.error('Erro ao registrar log de historico:', error)
+      throw error
+    }
     return data
   },
 }

@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase/client'
 import type { Tables, TablesInsert, TablesUpdate } from '@/lib/supabase/types'
-import { getPrazoEmprestimoDias, getMaxRenovacoes } from './parametros'
+import { getPrazoEmprestimoDias, getPrazoRenovacaoDias, getMaxRenovacoes } from './parametros'
 import { HistoricoService } from './historico'
 
 export type Emprestimo = Tables<'emprestimo'>
@@ -345,7 +345,7 @@ export const EmprestimosService = {
       if (loan.numero_renovacoes >= limiteRenovacoes)
         throw new Error(`Limite de renovação atingido (máx: ${limiteRenovacoes} renovação(ões)).`)
 
-      const prazoDias = await getPrazoEmprestimoDias()
+      const prazoDias = await getPrazoRenovacaoDias()
       const currentExpected = new Date(loan.data_prevista_devolucao)
       const newExpected = new Date(currentExpected)
       newExpected.setDate(newExpected.getDate() + prazoDias)

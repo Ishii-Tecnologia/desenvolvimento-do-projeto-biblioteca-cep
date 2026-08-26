@@ -12,6 +12,15 @@ export async function getPrazoEmprestimoDias(): Promise<number> {
   return data ? parseInt(data.valor) : 15
 }
 
+export async function getPrazoRenovacaoDias(): Promise<number> {
+  const { data } = await supabase
+    .from('parametros')
+    .select('valor')
+    .eq('chave', 'prazo_renovacao_dias')
+    .maybeSingle()
+  return data ? parseInt(data.valor) : 15
+}
+
 export async function getMaxRenovacoes(): Promise<number> {
   const { data } = await supabase
     .from('parametros')

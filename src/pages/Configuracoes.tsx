@@ -33,6 +33,7 @@ interface SystemParam {
 
 const DEFAULT_PARAMS: Record<
   | 'prazo_emprestimo_dias'
+  | 'prazo_renovacao_dias'
   | 'max_renovacoes'
   | 'max_exemplares_por_leitor'
   | 'prazo_reserva_dias'
@@ -56,6 +57,14 @@ const DEFAULT_PARAMS: Record<
     defaultValue: '15',
     label: 'Prazo Padrão de Empréstimo (Dias Corridos)',
     description: 'Quantidade de dias corridos para devolução ao criar novos empréstimos.',
+    type: 'number',
+    min: 1,
+    max: 180,
+  },
+  prazo_renovacao_dias: {
+    defaultValue: '15',
+    label: 'Prazo de Renovação (Dias Corridos)',
+    description: 'Quantidade de dias corridos acrescentados a cada renovação de empréstimo.',
     type: 'number',
     min: 1,
     max: 180,
@@ -94,9 +103,12 @@ export default function Configuracoes() {
   const [saving, setSaving] = useState(false)
   const [runningRoutine, setRunningRoutine] = useState(false)
 
-  // State values for all 5 parameters
+  // State values for parameters
   const [prazoEmprestimoDias, setPrazoEmprestimoDias] = useState(
     DEFAULT_PARAMS.prazo_emprestimo_dias.defaultValue,
+  )
+  const [prazoRenovacaoDias, setPrazoRenovacaoDias] = useState(
+    DEFAULT_PARAMS.prazo_renovacao_dias.defaultValue,
   )
   const [maxRenovacoes, setMaxRenovacoes] = useState(DEFAULT_PARAMS.max_renovacoes.defaultValue)
   const [maxExemplaresPorLeitor, setMaxExemplaresPorLeitor] = useState(
@@ -125,6 +137,10 @@ export default function Configuracoes() {
         } else if (paramMap.has('prazo_devolucao_dias')) {
           // fallback compatibility
           setPrazoEmprestimoDias(paramMap.get('prazo_devolucao_dias')!)
+        }
+
+        if (paramMap.has('prazo_renovacao_dias')) {
+          setPrazoRenovacaoDias(paramMap.get('prazo_renovacao_dias')!)
         }
 
         if (paramMap.has('max_renovacoes')) {
@@ -167,6 +183,11 @@ export default function Configuracoes() {
         chave: 'prazo_emprestimo_dias',
         valor: String(prazoEmprestimoDias || DEFAULT_PARAMS.prazo_emprestimo_dias.defaultValue),
         descricao: DEFAULT_PARAMS.prazo_emprestimo_dias.description,
+      },
+      {
+        chave: 'prazo_renovacao_dias',
+        valor: String(prazoRenovacaoDias || DEFAULT_PARAMS.prazo_renovacao_dias.defaultValue),
+        descricao: DEFAULT_PARAMS.prazo_renovacao_dias.description,
       },
       {
         chave: 'max_renovacoes',
@@ -218,6 +239,7 @@ export default function Configuracoes() {
 
   const handleRestoreDefaults = () => {
     setPrazoEmprestimoDias(DEFAULT_PARAMS.prazo_emprestimo_dias.defaultValue)
+    setPrazoRenovacaoDias(DEFAULT_PARAMS.prazo_renovacao_dias.defaultValue)
     setMaxRenovacoes(DEFAULT_PARAMS.max_renovacoes.defaultValue)
     setMaxExemplaresPorLeitor(DEFAULT_PARAMS.max_exemplares_por_leitor.defaultValue)
     setPrazoReservaDias(DEFAULT_PARAMS.prazo_reserva_dias.defaultValue)
@@ -357,6 +379,31 @@ export default function Configuracoes() {
                   />
                   <p className="text-[11px] text-slate-500">
                     Padrão: <span className="font-semibold text-slate-700">15 dias</span> corridos.
+                  </p>
+                </div>
+
+                {/* Prazo de Renovação */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label
+                      htmlFor="prazo_renovacao_dias"
+                      className="text-xs font-semibold text-slate-700"
+                    >
+                      {DEFAULT_PARAMS.prazo_renovacao_dias.label}
+                    </Label>
+                  </div>
+                  <Input
+                    id="prazo_renovacao_dias"
+                    type="number"
+                    min={DEFAULT_PARAMS.prazo_renovacao_dias.min}
+                    max={DEFAULT_PARAMS.prazo_renovacao_dias.max}
+                    value={prazoRenovacaoDias}
+                    onChange={(e) => setPrazoRenovacaoDias(e.target.value)}
+                    disabled={!isAdmin || saving}
+                    className="text-sm font-medium font-mono"
+                  />
+                  <p className="text-[11px] text-slate-500">
+                    {DEFAULT_PARAMS.prazo_renovacao_dias.description}
                   </p>
                 </div>
 

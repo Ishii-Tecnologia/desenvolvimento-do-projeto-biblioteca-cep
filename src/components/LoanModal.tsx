@@ -20,7 +20,7 @@ import {
 import { EmprestimosService } from '@/services/emprestimos'
 import { ExemplaresService, ExemplarWithTitulo } from '@/services/exemplares'
 import { LeitoresService, Leitor } from '@/services/leitores'
-import { getPrazoEmprestimoDias } from '@/services/parametros'
+import { getPrazoEmprestimoDias, getPrazoRenovacaoDias } from '@/services/parametros'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import { Repeat, Loader2, Book, UserCheck, AlertCircle, Calendar } from 'lucide-react'
@@ -54,6 +54,7 @@ export function LoanModal({
   const [searchCopy, setSearchCopy] = useState('')
   const [searchReader, setSearchReader] = useState('')
   const [prazoDias, setPrazoDias] = useState<number>(15)
+  const [prazoRenovacaoDias, setPrazoRenovacaoDias] = useState<number>(15)
 
   useEffect(() => {
     if (open) {
@@ -73,14 +74,16 @@ export function LoanModal({
   const loadData = async () => {
     setLoadingData(true)
     try {
-      const [copies, readers, prazo] = await Promise.all([
+      const [copies, readers, prazo, prazoRenov] = await Promise.all([
         ExemplaresService.getAll('Disponivel'),
-        LeitoresService.getAll('', 'ativos'),
+        LeitoresService.getAll(),
         getPrazoEmprestimoDias(),
+        getPrazoRenovacaoDias(),
       ])
-      setAvailableExemplares(copies as any)
-      setActiveReaders(readers)
+      setAvailableExemplares(copies)
+      setActiveReaders(readers.filter((r) => !r.bloqueado))
       setPrazoDias(prazo)
+      setPrazoRenovacaoDias(prazoRenov)
     } catch (err: any) {
       toast({
         title: 'Erro ao carregar dados',
@@ -293,7 +296,7 @@ export function LoanModal({
                   </span>
                 </div>
                 <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-200/60">
-                  Regra do sistema: Permitida 1 (uma) renovação de {prazoDias} dias caso não haja
+                  Regra do sistema: Permitida renovação de {prazoRenovacaoDias} dias caso não haja
                   reservas ativas.
                 </div>
               </div>
