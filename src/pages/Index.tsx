@@ -119,10 +119,9 @@ export default function Index() {
             {isOperadorOrAdmin && (
               <Button
                 onClick={() => setBookModalOpen(true)}
-                variant="outline"
-                className="bg-slate-900/60 text-white border-slate-700 hover:bg-slate-800 font-medium gap-2"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium gap-2 shadow-md"
               >
-                <PlusCircle className="w-4 h-4 text-emerald-400" />
+                <PlusCircle className="w-4 h-4 text-blue-200" />
                 Cadastrar Livro
               </Button>
             )}
