@@ -299,7 +299,7 @@ export default function Acervo() {
                   {book.sinopse && book.sinopse.trim() !== '' && (
                     <p
                       title={book.sinopse}
-                      className="text-xs text-slate-600 line-clamp-3 leading-relaxed bg-slate-50/50 p-2 rounded border border-slate-100 italic cursor-help"
+                      className="text-xs text-slate-600 line-clamp-3 leading-relaxed bg-slate-50/50 p-2 rounded border border-slate-100 italic"
                     >
                       {book.sinopse}
                     </p>
