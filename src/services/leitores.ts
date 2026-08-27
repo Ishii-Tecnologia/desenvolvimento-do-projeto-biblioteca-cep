@@ -148,15 +148,31 @@ export const LeitoresService = {
   },
 
   async delete(id_leitor: number) {
-    // Check active loans
-    const { data: activeLoans } = await supabase
+    // 1. Contagem total de empréstimos vinculados ao leitor (ativos + históricos)
+    const { count: totalCount, error: countError } = await supabase
       .from('emprestimo')
-      .select('id_emprestimo')
+      .select('id_emprestimo', { count: 'exact', head: true })
       .eq('id_leitor', id_leitor)
-      .is('data_devolucao_real', null)
 
-    if (activeLoans && activeLoans.length > 0) {
-      throw new Error('Não é possível remover leitor com empréstimos ativos pendentes.')
+    if (countError) throw countError
+
+    if (totalCount !== null && totalCount > 0) {
+      // Verificar se há empréstimos ativos pendentes
+      const { data: activeLoans, error: activeError } = await supabase
+        .from('emprestimo')
+        .select('id_emprestimo')
+        .eq('id_leitor', id_leitor)
+        .is('data_devolucao_real', null)
+
+      if (activeError) throw activeError
+
+      if (activeLoans && activeLoans.length > 0) {
+        throw new Error('Não é possível remover leitor com empréstimos ativos pendentes.')
+      } else {
+        throw new Error(
+          'Este leitor possui histórico de empréstimos e não pode ser excluído. Considere bloqueá-lo para impedir novos empréstimos.',
+        )
+      }
     }
 
     const { error } = await supabase.from('leitor').delete().eq('id_leitor', id_leitor)
