@@ -387,7 +387,7 @@ export default function Configuracoes() {
       toast({
         title: 'Rotina executada',
         description: `Verificação de atrasos concluída (${data ?? 0} registros avaliados/atualizados).`,
-        variant: 'info',
+        className: 'bg-white text-slate-900 border-slate-200 shadow-lg',
       })
     } catch (err: any) {
       toast({

@@ -32,7 +32,7 @@ const toastVariants = cva(
           'toast-theme-teal border-[#136b77]/30 bg-[#136b77] text-[#ffffff] shadow-lg shadow-[#136b77]/25',
         success:
           'toast-theme-teal border-[#136b77]/30 bg-[#136b77] text-[#ffffff] shadow-lg shadow-[#136b77]/25',
-        info: 'toast-theme-cream border-[#ebdcc8] bg-[#fdf8f1] text-[#ffffff] [text-shadow:_0_1px_2px_rgba(40,30,20,0.35),_0_0_1px_rgba(40,30,20,0.6)] shadow-lg shadow-[#8d775f]/15',
+        info: 'toast-theme-info border-slate-200 bg-white text-slate-900 shadow-lg shadow-slate-900/10',
         destructive:
           'toast-theme-destructive border-rose-700 bg-rose-700 text-[#ffffff] shadow-lg shadow-rose-900/25',
       },
@@ -79,7 +79,7 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      'absolute right-3.5 top-3.5 rounded-sm p-1 text-[#d4af37] transition-all hover:opacity-100 hover:scale-110 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-[#d4af37] group-hover:opacity-100 group-[.toast-theme-destructive]:text-rose-200 group-[.toast-theme-destructive]:hover:text-white',
+      'absolute right-3.5 top-3.5 rounded-sm p-1 text-slate-400 transition-all hover:text-slate-900 hover:opacity-100 hover:scale-110 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-slate-400 group-hover:opacity-100 group-[.toast-theme-teal]:text-[#d4af37] group-[.toast-theme-destructive]:text-rose-200 group-[.toast-theme-destructive]:hover:text-white',
       className,
     )}
     toast-close=""

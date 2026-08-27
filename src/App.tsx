@@ -63,6 +63,14 @@ const App = () => (
               }
             />
             <Route
+              path="/logs"
+              element={
+                <ProtectedRoute requireOperator>
+                  <Historico />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/usuarios"
               element={
                 <ProtectedRoute requireAdmin>

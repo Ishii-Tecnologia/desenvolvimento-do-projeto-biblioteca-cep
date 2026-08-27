@@ -618,13 +618,13 @@ export default function Historico() {
                       </span>
                     )}
 
-                    <span className="flex items-center gap-1 text-slate-500">
-                      <Shield className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="flex items-center gap-1 font-medium text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                      <Shield className="w-3.5 h-3.5 text-slate-500" />
                       Operador: {log.usuario_sistema || 'Sistema'}
                     </span>
 
                     {log.detalhes && (
-                      <span className="text-slate-500 italic bg-slate-50 px-2 py-0.5 rounded">
+                      <span className="text-slate-600 italic bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
                         "{log.detalhes}"
                       </span>
                     )}
